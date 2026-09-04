@@ -4,7 +4,14 @@
  * surfaced to the user — automatic merge/resolution is a later step
  * (roadmap step 8), per docs/architecture.md.
  */
-export type SyncEntityType = "site" | "well" | "tank" | "treatmentSystem" | "treatmentWell";
+export type SyncEntityType =
+  | "client"
+  | "site"
+  | "well"
+  | "tank"
+  | "treatmentSystem"
+  | "treatmentWell"
+  | "parameterConfig";
 export type SyncOperation = "create" | "update" | "delete";
 
 export interface SyncPushEntry {

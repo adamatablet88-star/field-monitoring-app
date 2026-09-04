@@ -1,4 +1,5 @@
 import type {
+  Client as ClientRow,
   Site as SiteRow,
   Well as WellRow,
   Tank as TankRow,
@@ -7,6 +8,7 @@ import type {
   ParameterConfig as ParameterConfigRow,
 } from "@prisma/client";
 import type {
+  Client,
   Site,
   Well,
   Tank,
@@ -16,6 +18,10 @@ import type {
 } from "@field-monitoring/shared";
 
 // Row -> shared-type payload (what the client sees over the wire).
+
+export function clientRowToPayload(row: ClientRow): Client {
+  return { id: row.id, name: row.name };
+}
 
 export function siteRowToPayload(row: SiteRow): Site {
   return {
@@ -56,6 +62,7 @@ export function tankRowToPayload(row: TankRow & { wells?: { id: string }[] }): T
 export function parameterConfigRowToShared(row: ParameterConfigRow): ParameterConfig {
   return {
     id: row.id,
+    systemId: row.systemId,
     label: row.label,
     unit: row.unit,
     minValue: row.minValue,
@@ -97,6 +104,10 @@ export function treatmentWellRowToPayload(row: TreatmentWellRow): TreatmentWell 
 }
 
 // Shared-type payload -> Prisma scalar column data (for create/update).
+
+export function clientToRowData(payload: Client) {
+  return { id: payload.id, name: payload.name };
+}
 
 export function siteToRowData(payload: Site) {
   return {
@@ -142,8 +153,24 @@ export function treatmentSystemToRowData(payload: TreatmentSystem) {
     siteId: payload.siteId,
     systemType: payload.systemType,
     systemLabel: payload.systemLabel,
-    // parameters are managed through their own admin endpoints (roadmap step 3),
-    // not through the generic sync push for the system row itself.
+    // parameters sync as their own entity (see parameterConfigToRowData) —
+    // this row's scalar columns don't carry them.
+  };
+}
+
+export function parameterConfigToRowData(payload: ParameterConfig) {
+  return {
+    id: payload.id,
+    systemId: payload.systemId,
+    label: payload.label,
+    unit: payload.unit,
+    minValue: payload.minValue,
+    maxValue: payload.maxValue,
+    required: payload.required,
+    order: payload.order,
+    criticalDirection: payload.criticalDirection,
+    criticalValue: payload.criticalValue,
+    criticalMessage: payload.criticalMessage,
   };
 }
 

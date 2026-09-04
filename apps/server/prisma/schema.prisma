@@ -5,12 +5,12 @@
 // they get fully relational columns once each field form is implemented
 // (roadmap steps 4-6), so the schema doesn't need to be re-guessed twice.
 //
-// Site, Well, Tank, TreatmentSystem and TreatmentWell additionally carry
-// `version`/`updatedAt`/`deletedAt` — sync bookkeeping used by the
-// optimistic-concurrency push/pull endpoints in src/sync (roadmap step 2).
-// These are server-side only; they're deliberately absent from the
-// shared domain types in packages/shared, which describe entity shape,
-// not sync state.
+// Client, Site, Well, Tank, TreatmentSystem, TreatmentWell and
+// ParameterConfig additionally carry `version`/`updatedAt`/`deletedAt` —
+// sync bookkeeping used by the optimistic-concurrency push/pull endpoints
+// in src/sync (roadmap steps 2-3). These are server-side only; they're
+// deliberately absent from the shared domain types in packages/shared,
+// which describe entity shape, not sync state.
 
 generator client {
   provider = "prisma-client-js"
@@ -37,6 +37,12 @@ model Client {
   id    String @id @default(uuid())
   name  String
   sites Site[]
+
+  version   Int       @default(1)
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([updatedAt])
 }
 
 model Site {
@@ -138,7 +144,12 @@ model ParameterConfig {
   criticalValue     Float?
   criticalMessage   String
 
+  version   Int       @default(1)
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
   @@index([systemId])
+  @@index([updatedAt])
 }
 
 model TreatmentWell {

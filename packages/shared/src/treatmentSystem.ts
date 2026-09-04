@@ -9,9 +9,14 @@ export type CriticalDirection = "none" | "above" | "below";
  * parameter can carry its own critical-threshold layer — PID > 50ppm after
  * treatment is the default instance of this mechanism, not a hardcoded
  * rule. See docs/data-model.md section 8.
+ *
+ * Synced as its own entity (see packages/shared/src/sync.ts) so an admin
+ * can edit one parameter without touching the whole TreatmentSystem —
+ * hence the systemId back-reference, mirroring TreatmentWell.
  */
 export interface ParameterConfig {
   id: string;
+  systemId: string;
   label: string;
   unit: string;
   minValue: number | null;

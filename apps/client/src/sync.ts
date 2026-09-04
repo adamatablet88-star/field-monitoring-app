@@ -13,6 +13,8 @@ const LAST_PULLED_AT_KEY = "fieldMonitoring:lastPulledAt";
 
 function tableFor(entityType: SyncEntityType): Table<{ id: string }, string> {
   switch (entityType) {
+    case "client":
+      return db.clients as unknown as Table<{ id: string }, string>;
     case "site":
       return db.sites as unknown as Table<{ id: string }, string>;
     case "well":
@@ -23,6 +25,8 @@ function tableFor(entityType: SyncEntityType): Table<{ id: string }, string> {
       return db.treatmentSystems as unknown as Table<{ id: string }, string>;
     case "treatmentWell":
       return db.treatmentWells as unknown as Table<{ id: string }, string>;
+    case "parameterConfig":
+      return db.parameterConfigs as unknown as Table<{ id: string }, string>;
   }
 }
 

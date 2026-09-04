@@ -8,6 +8,8 @@ import type {
 } from "@field-monitoring/shared";
 import { prisma } from "../prisma.js";
 import {
+  clientRowToPayload,
+  clientToRowData,
   siteRowToPayload,
   siteToRowData,
   wellRowToPayload,
@@ -18,6 +20,8 @@ import {
   treatmentSystemToRowData,
   treatmentWellRowToPayload,
   treatmentWellToRowData,
+  parameterConfigRowToShared,
+  parameterConfigToRowData,
 } from "./mapping.js";
 
 interface SyncableRow {
@@ -40,6 +44,18 @@ const tankInclude = { wells: { select: { id: true } } } as const;
 const treatmentSystemInclude = { parameters: true } as const;
 
 const handlers: Record<SyncEntityType, EntityHandler> = {
+  client: {
+    toPayload: (row) => clientRowToPayload(row as Parameters<typeof clientRowToPayload>[0]),
+    toRowData: (payload) => clientToRowData(payload as Parameters<typeof clientToRowData>[0]),
+    findUnique: (id) => prisma.client.findUnique({ where: { id } }),
+    create: (data) => prisma.client.create({ data: data as Parameters<typeof prisma.client.create>[0]["data"] }),
+    update: (id, data) =>
+      prisma.client.update({
+        where: { id },
+        data: { ...data, version: { increment: 1 } } as Parameters<typeof prisma.client.update>[0]["data"],
+      }),
+    softDelete: (id) => prisma.client.update({ where: { id }, data: { deletedAt: new Date(), version: { increment: 1 } } }),
+  },
   site: {
     toPayload: (row) => siteRowToPayload(row as Parameters<typeof siteRowToPayload>[0]),
     toRowData: (payload) => siteToRowData(payload as Parameters<typeof siteToRowData>[0]),
@@ -105,6 +121,20 @@ const handlers: Record<SyncEntityType, EntityHandler> = {
         data: { ...data, version: { increment: 1 } } as Parameters<typeof prisma.treatmentWell.update>[0]["data"],
       }),
     softDelete: (id) => prisma.treatmentWell.update({ where: { id }, data: { deletedAt: new Date(), version: { increment: 1 } } }),
+  },
+  parameterConfig: {
+    toPayload: (row) => parameterConfigRowToShared(row as Parameters<typeof parameterConfigRowToShared>[0]),
+    toRowData: (payload) => parameterConfigToRowData(payload as Parameters<typeof parameterConfigToRowData>[0]),
+    findUnique: (id) => prisma.parameterConfig.findUnique({ where: { id } }),
+    create: (data) =>
+      prisma.parameterConfig.create({ data: data as Parameters<typeof prisma.parameterConfig.create>[0]["data"] }),
+    update: (id, data) =>
+      prisma.parameterConfig.update({
+        where: { id },
+        data: { ...data, version: { increment: 1 } } as Parameters<typeof prisma.parameterConfig.update>[0]["data"],
+      }),
+    softDelete: (id) =>
+      prisma.parameterConfig.update({ where: { id }, data: { deletedAt: new Date(), version: { increment: 1 } } }),
   },
 };
 
@@ -220,20 +250,24 @@ syncRouter.get("/sync/pull", async (req, res) => {
   const updatedAtFilter = since ? { updatedAt: { gt: since } } : {};
   const serverTime = new Date();
 
-  const [sites, wells, tanks, treatmentSystems, treatmentWells] = await Promise.all([
+  const [clients, sites, wells, tanks, treatmentSystems, treatmentWells, parameterConfigs] = await Promise.all([
+    prisma.client.findMany({ where: updatedAtFilter }),
     prisma.site.findMany({ where: updatedAtFilter }),
     prisma.well.findMany({ where: updatedAtFilter }),
     prisma.tank.findMany({ where: updatedAtFilter, include: tankInclude }),
     prisma.treatmentSystem.findMany({ where: updatedAtFilter, include: treatmentSystemInclude }),
     prisma.treatmentWell.findMany({ where: updatedAtFilter }),
+    prisma.parameterConfig.findMany({ where: updatedAtFilter }),
   ]);
 
   const entities: SyncPullEntity[] = [
+    ...clients.map((row) => toPullEntity("client", row, handlers.client.toPayload)),
     ...sites.map((row) => toPullEntity("site", row, handlers.site.toPayload)),
     ...wells.map((row) => toPullEntity("well", row, handlers.well.toPayload)),
     ...tanks.map((row) => toPullEntity("tank", row, handlers.tank.toPayload)),
     ...treatmentSystems.map((row) => toPullEntity("treatmentSystem", row, handlers.treatmentSystem.toPayload)),
     ...treatmentWells.map((row) => toPullEntity("treatmentWell", row, handlers.treatmentWell.toPayload)),
+    ...parameterConfigs.map((row) => toPullEntity("parameterConfig", row, handlers.parameterConfig.toPayload)),
   ];
 
   const response: SyncPullResponse = { serverTime: serverTime.toISOString(), entities };

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { liveQuery } from "dexie";
 import { db } from "./db";
 import { runSync, type SyncSummary } from "./sync";
+import { AdminApp } from "./admin/AdminApp";
 import "./App.css";
 
 function App() {
@@ -73,10 +74,14 @@ function App() {
         {syncError && <p className="sync-error">שגיאת סנכרון: {syncError}</p>}
       </section>
 
-      <p>
-        טפסי השטח והמסכים הניהוליים עדיין לא מומשו — ראו{" "}
+      <p className="hint">
+        טפסי השטח (עדשת דלק, SVE, Bio-venting, מי תהום) עדיין לא מומשו — ראו{" "}
         <code>docs/roadmap.md</code> בשורש המאגר לסדר הפיתוח המתוכנן.
       </p>
+
+      <hr />
+
+      <AdminApp />
     </main>
   );
 }

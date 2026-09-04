@@ -124,6 +124,7 @@ type CriticalDirection = "none" | "above" | "below";
 
 interface ParameterConfig {
   id: string;
+  systemId: string;              // סונכרן כישות עצמאית משלו — ראו סעיף 9
   label: string;                 // שם המד
   unit: string;                  // יחידת מידה
   minValue: number | null;       // טווח תקין — להצגת הקשר בלבד (Soft Warning)

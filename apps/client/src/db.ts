@@ -6,6 +6,7 @@ import type {
   Tank,
   TreatmentSystem,
   TreatmentWell,
+  ParameterConfig,
   SyncEntityType,
   SyncOperation,
 } from "@field-monitoring/shared";
@@ -51,6 +52,7 @@ class FieldMonitoringDB extends Dexie {
   tanks!: EntityTable<Tank, "id">;
   treatmentSystems!: EntityTable<TreatmentSystem, "id">;
   treatmentWells!: EntityTable<TreatmentWell, "id">;
+  parameterConfigs!: EntityTable<ParameterConfig, "id">;
   outbox!: EntityTable<OutboxEntry, "id">;
   syncMeta!: EntityTable<SyncMetaRecord, "key">;
 
@@ -63,6 +65,7 @@ class FieldMonitoringDB extends Dexie {
       tanks: "id, siteId",
       treatmentSystems: "id, siteId, systemType",
       treatmentWells: "id, systemId, code, wellType",
+      parameterConfigs: "id, systemId, order",
       outbox: "++id, entityType, entityId, status, createdAt",
       syncMeta: "key, entityType, entityId",
     });
