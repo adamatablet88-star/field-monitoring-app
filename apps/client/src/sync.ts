@@ -51,6 +51,14 @@ function tableFor(entityType: SyncEntityType): Table<{ id: string }, string> {
       return db.groundwaterWells as unknown as Table<{ id: string }, string>;
     case "groundwaterVisit":
       return db.groundwaterVisits as unknown as Table<{ id: string }, string>;
+    case "frequencySetting":
+      return db.frequencySettings as unknown as Table<{ id: string }, string>;
+    case "activeStatus":
+      return db.activeStatuses as unknown as Table<{ id: string }, string>;
+    case "regulatoryReport":
+      return db.regulatoryReports as unknown as Table<{ id: string }, string>;
+    case "scheduledSpecialTest":
+      return db.scheduledSpecialTests as unknown as Table<{ id: string }, string>;
   }
 }
 

@@ -6,11 +6,12 @@ import { runSync, type SyncSummary } from "./sync";
 import { AdminApp } from "./admin/AdminApp";
 import { FieldApp } from "./field/FieldApp";
 import { ConflictsPanel } from "./sync/ConflictsPanel";
+import { DueThisMonthView } from "./compliance/DueThisMonthView";
 import { LoginForm } from "./auth/LoginForm";
 import { getStoredUser, clearAuth } from "./auth/authStore";
 import "./App.css";
 
-type MainTab = "field" | "admin";
+type MainTab = "field" | "due" | "admin";
 
 function App() {
   const [user, setUser] = useState<PublicUser | null>(() => getStoredUser());
@@ -112,6 +113,9 @@ function App() {
         <button type="button" className={mainTab === "field" ? "active" : ""} onClick={() => setMainTab("field")}>
           טפסי שטח
         </button>
+        <button type="button" className={mainTab === "due" ? "active" : ""} onClick={() => setMainTab("due")}>
+          מה נדרש החודש
+        </button>
         {user.role === "admin" && (
           <button type="button" className={mainTab === "admin" ? "active" : ""} onClick={() => setMainTab("admin")}>
             הקמת אתר
@@ -119,7 +123,10 @@ function App() {
         )}
       </nav>
 
-      {mainTab === "admin" && user.role === "admin" ? <AdminApp /> : <FieldApp />}
+      {mainTab === "admin" && user.role === "admin" && <AdminApp />}
+      {mainTab === "due" && <DueThisMonthView />}
+      {mainTab === "field" && <FieldApp />}
+      {mainTab === "admin" && user.role !== "admin" && <FieldApp />}
     </main>
   );
 }

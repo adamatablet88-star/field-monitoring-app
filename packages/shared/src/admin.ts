@@ -1,23 +1,29 @@
+import type { FrequencyValue } from "./frequency.js";
+
 export type FrequencyScope = { siteId: string } | { systemId: string };
+
+export interface FrequencyChangeRecord {
+  changedBy: string;
+  changedAt: string;
+  reason: string;
+  previousValue: FrequencyValue;
+}
 
 export interface FrequencySetting {
   id: string;
   scope: FrequencyScope;
   /** Annual by default per the client contract; editable mid-year. */
-  defaultFrequency: string;
-  currentFrequency: string;
-  history: Array<{
-    changedBy: string;
-    changedAt: string;
-    reason: string;
-    previousValue: string;
-  }>;
+  defaultFrequency: FrequencyValue;
+  currentFrequency: FrequencyValue;
+  /** Every change appended here — never overwritten silently (Audit Trail). */
+  history: FrequencyChangeRecord[];
 }
 
 export interface ActiveStatus {
   id: string;
   scope: FrequencyScope;
   active: boolean;
+  /** Stamped by the server from the authenticated user's role, never trusted from the client payload — see apps/server/src/sync/router.ts. */
   source: "technician" | "admin";
   reason: string;
 }

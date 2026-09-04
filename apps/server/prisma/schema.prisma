@@ -282,3 +282,54 @@ model GroundwaterVisit {
   @@index([wellId])
   @@index([updatedAt])
 }
+
+// Frequency/regulatory-tracking entities (roadmap step 9). Each of these
+// four has a `scope` that's a union (siteId or systemId — see
+// FrequencyScope in packages/shared/src/admin.ts) and/or a nested
+// history array, which don't map cleanly onto relational columns — same
+// reasoning as the visit models above, so they follow the same JSON-blob
+// `data` pattern rather than one relational shape each.
+
+model FrequencySetting {
+  id   String @id @default(uuid())
+  data Json // full shape: FrequencySetting in packages/shared/src/admin.ts
+
+  version   Int       @default(1)
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([updatedAt])
+}
+
+model ActiveStatus {
+  id   String @id @default(uuid())
+  data Json // full shape: ActiveStatus in packages/shared/src/admin.ts
+
+  version   Int       @default(1)
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([updatedAt])
+}
+
+model RegulatoryReport {
+  id   String @id @default(uuid())
+  data Json // full shape: RegulatoryReport in packages/shared/src/admin.ts
+
+  version   Int       @default(1)
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([updatedAt])
+}
+
+model ScheduledSpecialTest {
+  id   String @id @default(uuid())
+  data Json // full shape: ScheduledSpecialTest in packages/shared/src/admin.ts
+
+  version   Int       @default(1)
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([updatedAt])
+}

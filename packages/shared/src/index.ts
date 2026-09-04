@@ -8,6 +8,7 @@ export * from "./site.js";
 export * from "./well.js";
 export * from "./treatmentSystem.js";
 export * from "./visits.js";
+export * from "./frequency.js";
 export * from "./admin.js";
 export * from "./user.js";
 export * from "./sync.js";

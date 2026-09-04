@@ -16,7 +16,11 @@ export type SyncEntityType =
   | "sveSystemVisit"
   | "bioVentingSystemVisit"
   | "groundwaterWell"
-  | "groundwaterVisit";
+  | "groundwaterVisit"
+  | "frequencySetting"
+  | "activeStatus"
+  | "regulatoryReport"
+  | "scheduledSpecialTest";
 export type SyncOperation = "create" | "update" | "delete";
 
 export interface SyncPushEntry {

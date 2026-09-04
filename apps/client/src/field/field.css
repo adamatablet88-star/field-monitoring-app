@@ -144,3 +144,21 @@
   color: #555;
   align-self: center;
 }
+
+.active-status-details {
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.active-status-details summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.active-status-details .panel {
+  border: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+}

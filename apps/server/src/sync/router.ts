@@ -35,6 +35,14 @@ import {
   groundwaterWellToRowData,
   groundwaterVisitRowToPayload,
   groundwaterVisitToRowData,
+  frequencySettingRowToPayload,
+  frequencySettingToRowData,
+  activeStatusRowToPayload,
+  activeStatusToRowData,
+  regulatoryReportRowToPayload,
+  regulatoryReportToRowData,
+  scheduledSpecialTestRowToPayload,
+  scheduledSpecialTestToRowData,
 } from "./mapping.js";
 
 interface SyncableRow {
@@ -225,10 +233,78 @@ const handlers: Record<SyncEntityType, EntityHandler> = {
     softDelete: (id) =>
       prisma.groundwaterVisit.update({ where: { id }, data: { deletedAt: new Date(), version: { increment: 1 } } }),
   },
+  frequencySetting: {
+    toPayload: (row) => frequencySettingRowToPayload(row as Parameters<typeof frequencySettingRowToPayload>[0]),
+    toRowData: (payload) => frequencySettingToRowData(payload as Parameters<typeof frequencySettingToRowData>[0]),
+    findUnique: (id) => prisma.frequencySetting.findUnique({ where: { id } }),
+    create: (data) =>
+      prisma.frequencySetting.create({ data: data as Parameters<typeof prisma.frequencySetting.create>[0]["data"] }),
+    update: (id, data) =>
+      prisma.frequencySetting.update({
+        where: { id },
+        data: { ...data, version: { increment: 1 } } as Parameters<typeof prisma.frequencySetting.update>[0]["data"],
+      }),
+    softDelete: (id) =>
+      prisma.frequencySetting.update({ where: { id }, data: { deletedAt: new Date(), version: { increment: 1 } } }),
+  },
+  activeStatus: {
+    toPayload: (row) => activeStatusRowToPayload(row as Parameters<typeof activeStatusRowToPayload>[0]),
+    toRowData: (payload) => activeStatusToRowData(payload as Parameters<typeof activeStatusToRowData>[0]),
+    findUnique: (id) => prisma.activeStatus.findUnique({ where: { id } }),
+    create: (data) => prisma.activeStatus.create({ data: data as Parameters<typeof prisma.activeStatus.create>[0]["data"] }),
+    update: (id, data) =>
+      prisma.activeStatus.update({
+        where: { id },
+        data: { ...data, version: { increment: 1 } } as Parameters<typeof prisma.activeStatus.update>[0]["data"],
+      }),
+    softDelete: (id) =>
+      prisma.activeStatus.update({ where: { id }, data: { deletedAt: new Date(), version: { increment: 1 } } }),
+  },
+  regulatoryReport: {
+    toPayload: (row) => regulatoryReportRowToPayload(row as Parameters<typeof regulatoryReportRowToPayload>[0]),
+    toRowData: (payload) => regulatoryReportToRowData(payload as Parameters<typeof regulatoryReportToRowData>[0]),
+    findUnique: (id) => prisma.regulatoryReport.findUnique({ where: { id } }),
+    create: (data) =>
+      prisma.regulatoryReport.create({ data: data as Parameters<typeof prisma.regulatoryReport.create>[0]["data"] }),
+    update: (id, data) =>
+      prisma.regulatoryReport.update({
+        where: { id },
+        data: { ...data, version: { increment: 1 } } as Parameters<typeof prisma.regulatoryReport.update>[0]["data"],
+      }),
+    softDelete: (id) =>
+      prisma.regulatoryReport.update({ where: { id }, data: { deletedAt: new Date(), version: { increment: 1 } } }),
+  },
+  scheduledSpecialTest: {
+    toPayload: (row) => scheduledSpecialTestRowToPayload(row as Parameters<typeof scheduledSpecialTestRowToPayload>[0]),
+    toRowData: (payload) =>
+      scheduledSpecialTestToRowData(payload as Parameters<typeof scheduledSpecialTestToRowData>[0]),
+    findUnique: (id) => prisma.scheduledSpecialTest.findUnique({ where: { id } }),
+    create: (data) =>
+      prisma.scheduledSpecialTest.create({ data: data as Parameters<typeof prisma.scheduledSpecialTest.create>[0]["data"] }),
+    update: (id, data) =>
+      prisma.scheduledSpecialTest.update({
+        where: { id },
+        data: { ...data, version: { increment: 1 } } as Parameters<typeof prisma.scheduledSpecialTest.update>[0]["data"],
+      }),
+    softDelete: (id) =>
+      prisma.scheduledSpecialTest.update({ where: { id }, data: { deletedAt: new Date(), version: { increment: 1 } } }),
+  },
 };
 
 function isPrismaUniqueViolation(err: unknown): boolean {
   return typeof err === "object" && err !== null && "code" in err && (err as { code: unknown }).code === "P2002";
+}
+
+/**
+ * ActiveStatus.source records who reported the status ("technician" from
+ * a real visit finding, or "admin" from a manual override) — like a
+ * visit's createdBy, it's stamped from the authenticated user's role,
+ * never trusted from the client payload (see docs/business-logic.md
+ * 5.2: "בשני המקרים נשמר מקור הסימון").
+ */
+function stampSource(entityType: SyncEntityType, payload: unknown, user: AuthTokenPayload): unknown {
+  if (entityType !== "activeStatus" || typeof payload !== "object" || payload === null) return payload;
+  return { ...(payload as Record<string, unknown>), source: user.role === "admin" ? "admin" : "technician" };
 }
 
 async function processEntry(entry: SyncPushEntry, user: AuthTokenPayload): Promise<SyncPushResult> {
@@ -243,7 +319,7 @@ async function processEntry(entry: SyncPushEntry, user: AuthTokenPayload): Promi
       if (!permission.allowed) {
         return { entityType: entry.entityType, entityId: entry.entityId, status: "error", message: permission.message };
       }
-      const data = handler.toRowData(entry.payload);
+      const data = handler.toRowData(stampSource(entry.entityType, entry.payload, user));
       // Ownership is stamped by the server from the authenticated user, never
       // trusted from the client payload — see checkPermission's same-day-own-visit rule.
       const dataWithAudit = VISIT_ENTITY_TYPES.has(entry.entityType) ? { ...data, createdBy: user.sub } : data;
@@ -279,7 +355,7 @@ async function processEntry(entry: SyncPushEntry, user: AuthTokenPayload): Promi
     }
 
     if (entry.operation === "update") {
-      const { id: _id, ...data } = handler.toRowData(entry.payload);
+      const { id: _id, ...data } = handler.toRowData(stampSource(entry.entityType, entry.payload, user));
       const row = await handler.update(entry.entityId, data);
       return {
         entityType: entry.entityType,
@@ -365,6 +441,10 @@ syncRouter.get("/sync/pull", async (req, res) => {
     bioVentingSystemVisits,
     groundwaterWells,
     groundwaterVisits,
+    frequencySettings,
+    activeStatuses,
+    regulatoryReports,
+    scheduledSpecialTests,
   ] = await Promise.all([
     prisma.client.findMany({ where: updatedAtFilter }),
     prisma.site.findMany({ where: updatedAtFilter }),
@@ -378,6 +458,10 @@ syncRouter.get("/sync/pull", async (req, res) => {
     prisma.bioVentingSystemVisit.findMany({ where: updatedAtFilter }),
     prisma.groundwaterWell.findMany({ where: updatedAtFilter }),
     prisma.groundwaterVisit.findMany({ where: updatedAtFilter }),
+    prisma.frequencySetting.findMany({ where: updatedAtFilter }),
+    prisma.activeStatus.findMany({ where: updatedAtFilter }),
+    prisma.regulatoryReport.findMany({ where: updatedAtFilter }),
+    prisma.scheduledSpecialTest.findMany({ where: updatedAtFilter }),
   ]);
 
   const entities: SyncPullEntity[] = [
@@ -395,6 +479,12 @@ syncRouter.get("/sync/pull", async (req, res) => {
     ),
     ...groundwaterWells.map((row) => toPullEntity("groundwaterWell", row, handlers.groundwaterWell.toPayload)),
     ...groundwaterVisits.map((row) => toPullEntity("groundwaterVisit", row, handlers.groundwaterVisit.toPayload)),
+    ...frequencySettings.map((row) => toPullEntity("frequencySetting", row, handlers.frequencySetting.toPayload)),
+    ...activeStatuses.map((row) => toPullEntity("activeStatus", row, handlers.activeStatus.toPayload)),
+    ...regulatoryReports.map((row) => toPullEntity("regulatoryReport", row, handlers.regulatoryReport.toPayload)),
+    ...scheduledSpecialTests.map((row) =>
+      toPullEntity("scheduledSpecialTest", row, handlers.scheduledSpecialTest.toPayload),
+    ),
   ];
 
   const response: SyncPullResponse = { serverTime: serverTime.toISOString(), entities };

@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Client, ProtocolType, Site } from "@field-monitoring/shared";
 import { db } from "../db";
 import { useLocalCollection } from "../admin/useLocalCollection";
+import { ActiveStatusPanel } from "../admin/ActiveStatusPanel";
 import { FuelLensWellList } from "./FuelLensWellList";
 import { TreatmentSystemList } from "./TreatmentSystemList";
 import { GroundwaterWellList } from "./groundwater/GroundwaterWellList";
@@ -42,6 +43,11 @@ export function FieldApp() {
           ← חזרה לרשימת האתרים
         </button>
         <h1>{selectedSite.name}</h1>
+
+        <details className="active-status-details">
+          <summary>עדכון סטטוס פעיל / לא-פעיל (מתוך ביקור בפועל)</summary>
+          <ActiveStatusPanel siteId={selectedSite.id} />
+        </details>
 
         {selectedSite.protocolTypes.length > 1 && (
           <nav className="tab-bar">

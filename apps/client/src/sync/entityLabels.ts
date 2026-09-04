@@ -13,6 +13,10 @@ export const ENTITY_TYPE_LABELS: Record<SyncEntityType, string> = {
   bioVentingSystemVisit: "ביקור Bio-venting",
   groundwaterWell: "קידוח ניטור מי תהום",
   groundwaterVisit: "ביקור דיגום מי תהום",
+  frequencySetting: "הגדרת תדירות",
+  activeStatus: "סטטוס פעיל/לא-פעיל",
+  regulatoryReport: "דוח רגולטורי",
+  scheduledSpecialTest: "בדיקה מיוחדת מתוזמנת",
 };
 
 export const OPERATION_LABELS: Record<SyncOperation, string> = {

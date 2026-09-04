@@ -12,6 +12,10 @@ import type {
   BioVentingSystemVisit,
   GroundwaterWell,
   GroundwaterVisit,
+  FrequencySetting,
+  ActiveStatus,
+  RegulatoryReport,
+  ScheduledSpecialTest,
   SyncEntityType,
   SyncOperation,
 } from "@field-monitoring/shared";
@@ -74,6 +78,10 @@ class FieldMonitoringDB extends Dexie {
   bioVentingSystemVisits!: EntityTable<BioVentingSystemVisit, "id">;
   groundwaterWells!: EntityTable<GroundwaterWell, "id">;
   groundwaterVisits!: EntityTable<GroundwaterVisit, "id">;
+  frequencySettings!: EntityTable<FrequencySetting, "id">;
+  activeStatuses!: EntityTable<ActiveStatus, "id">;
+  regulatoryReports!: EntityTable<RegulatoryReport, "id">;
+  scheduledSpecialTests!: EntityTable<ScheduledSpecialTest, "id">;
   outbox!: EntityTable<OutboxEntry, "id">;
   syncMeta!: EntityTable<SyncMetaRecord, "key">;
 
@@ -94,6 +102,17 @@ class FieldMonitoringDB extends Dexie {
       groundwaterVisits: "id, wellId, visitDate",
       outbox: "++id, entityType, entityId, status, createdAt",
       syncMeta: "key, entityType, entityId",
+    });
+    // FrequencySetting/ActiveStatus/ScheduledSpecialTest are keyed by a
+    // union scope ({siteId} or {systemId}, see FrequencyScope in
+    // packages/shared/src/admin.ts) — not indexable as a single Dexie
+    // column, so these are filtered client-side same as every other
+    // scoped local collection (e.g. wells-by-site in FieldApp).
+    this.version(2).stores({
+      frequencySettings: "id",
+      activeStatuses: "id",
+      regulatoryReports: "id, siteId, type",
+      scheduledSpecialTests: "id",
     });
   }
 }

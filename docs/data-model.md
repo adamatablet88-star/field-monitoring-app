@@ -319,13 +319,18 @@ interface GroundwaterVisit {
 
 ## 10. ניהול תדירויות ומעקב רגולטורי
 
+ממומש (roadmap שלב 9). `FrequencyValue` הוא קבוצה סגורה (לא טקסט חופשי) —
+כדי שמסך "מה נדרש החודש" יוכל לחשב תאריך יעד במקום לפרש מחרוזת עברית:
+
 ```ts
+type FrequencyValue = "monthly" | "quarterly" | "semiannual" | "annual";
+
 interface FrequencySetting {
   id: string;
   scope: { siteId: string } | { systemId: string };
-  defaultFrequency: string;          // ברירת מחדל שנתית לפי חוזה, ניתנת לעדכון תוך כדי השנה
-  currentFrequency: string;
-  history: Array<{ changedBy: string; changedAt: string; reason: string; previousValue: string }>; // Audit Trail
+  defaultFrequency: FrequencyValue;  // ברירת מחדל שנתית לפי חוזה, ניתנת לעדכון תוך כדי השנה
+  currentFrequency: FrequencyValue;
+  history: Array<{ changedBy: string; changedAt: string; reason: string; previousValue: FrequencyValue }>; // Audit Trail
 }
 
 interface ActiveStatus {

@@ -11,6 +11,10 @@ import type {
   BioVentingSystemVisit as BioVentingSystemVisitRow,
   GroundwaterWell as GroundwaterWellRow,
   GroundwaterVisit as GroundwaterVisitRow,
+  FrequencySetting as FrequencySettingRow,
+  ActiveStatus as ActiveStatusRow,
+  RegulatoryReport as RegulatoryReportRow,
+  ScheduledSpecialTest as ScheduledSpecialTestRow,
 } from "@prisma/client";
 import type {
   Client,
@@ -25,6 +29,10 @@ import type {
   BioVentingSystemVisit,
   GroundwaterWell,
   GroundwaterVisit,
+  FrequencySetting,
+  ActiveStatus,
+  RegulatoryReport,
+  ScheduledSpecialTest,
 } from "@field-monitoring/shared";
 
 // Row -> shared-type payload (what the client sees over the wire).
@@ -147,6 +155,24 @@ export function groundwaterWellRowToPayload(row: GroundwaterWellRow): Groundwate
 
 export function groundwaterVisitRowToPayload(row: GroundwaterVisitRow): GroundwaterVisit {
   return row.data as unknown as GroundwaterVisit;
+}
+
+// Same JSON-blob pattern as the visit models — see the comment above
+// these four models in prisma/schema.prisma.
+export function frequencySettingRowToPayload(row: FrequencySettingRow): FrequencySetting {
+  return row.data as unknown as FrequencySetting;
+}
+
+export function activeStatusRowToPayload(row: ActiveStatusRow): ActiveStatus {
+  return row.data as unknown as ActiveStatus;
+}
+
+export function regulatoryReportRowToPayload(row: RegulatoryReportRow): RegulatoryReport {
+  return row.data as unknown as RegulatoryReport;
+}
+
+export function scheduledSpecialTestRowToPayload(row: ScheduledSpecialTestRow): ScheduledSpecialTest {
+  return row.data as unknown as ScheduledSpecialTest;
 }
 
 // Shared-type payload -> Prisma scalar column data (for create/update).
@@ -290,4 +316,20 @@ export function groundwaterVisitToRowData(payload: GroundwaterVisit) {
     visitDate: new Date(payload.visitDate),
     data: payload as unknown as object,
   };
+}
+
+export function frequencySettingToRowData(payload: FrequencySetting) {
+  return { id: payload.id, data: payload as unknown as object };
+}
+
+export function activeStatusToRowData(payload: ActiveStatus) {
+  return { id: payload.id, data: payload as unknown as object };
+}
+
+export function regulatoryReportToRowData(payload: RegulatoryReport) {
+  return { id: payload.id, data: payload as unknown as object };
+}
+
+export function scheduledSpecialTestToRowData(payload: ScheduledSpecialTest) {
+  return { id: payload.id, data: payload as unknown as object };
 }
