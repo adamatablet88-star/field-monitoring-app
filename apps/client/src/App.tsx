@@ -3,7 +3,10 @@ import { liveQuery } from "dexie";
 import { db } from "./db";
 import { runSync, type SyncSummary } from "./sync";
 import { AdminApp } from "./admin/AdminApp";
+import { FieldApp } from "./field/FieldApp";
 import "./App.css";
+
+type MainTab = "field" | "admin";
 
 function App() {
   const [dbReady, setDbReady] = useState(false);
@@ -12,6 +15,7 @@ function App() {
   const [syncing, setSyncing] = useState(false);
   const [lastSync, setLastSync] = useState<SyncSummary | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [mainTab, setMainTab] = useState<MainTab>("field");
 
   useEffect(() => {
     db.open()
@@ -75,13 +79,20 @@ function App() {
       </section>
 
       <p className="hint">
-        טפסי השטח (עדשת דלק, SVE, Bio-venting, מי תהום) עדיין לא מומשו — ראו{" "}
+        טפסי SVE, Bio-venting ודיגום מי תהום עדיין לא מומשו — ראו{" "}
         <code>docs/roadmap.md</code> בשורש המאגר לסדר הפיתוח המתוכנן.
       </p>
 
-      <hr />
+      <nav className="tab-bar main-tab-bar">
+        <button type="button" className={mainTab === "field" ? "active" : ""} onClick={() => setMainTab("field")}>
+          טפסי שטח
+        </button>
+        <button type="button" className={mainTab === "admin" ? "active" : ""} onClick={() => setMainTab("admin")}>
+          הקמת אתר
+        </button>
+      </nav>
 
-      <AdminApp />
+      {mainTab === "field" ? <FieldApp /> : <AdminApp />}
     </main>
   );
 }

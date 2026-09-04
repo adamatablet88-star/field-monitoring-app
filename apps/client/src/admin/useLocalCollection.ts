@@ -23,7 +23,11 @@ export function useLocalCollection<T extends { id: string }>(
   }, [table, entityType]);
 
   async function save(entity: T) {
-    const exists = items.some((item) => item.id === entity.id);
+    // Queried directly against the table (not React state) so this is
+    // correct even the instant after mount, before this hook's own
+    // liveQuery has emitted its first value — e.g. opening a single-entity
+    // edit form and saving it right away.
+    const exists = (await table.where(":id").equals(entity.id).count()) > 0;
     await enqueueChange(entityType, exists ? "update" : "create", entity);
   }
 

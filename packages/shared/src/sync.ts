@@ -11,7 +11,8 @@ export type SyncEntityType =
   | "tank"
   | "treatmentSystem"
   | "treatmentWell"
-  | "parameterConfig";
+  | "parameterConfig"
+  | "fuelLensVisit";
 export type SyncOperation = "create" | "update" | "delete";
 
 export interface SyncPushEntry {

@@ -6,6 +6,7 @@ import type {
   TreatmentSystem as TreatmentSystemRow,
   TreatmentWell as TreatmentWellRow,
   ParameterConfig as ParameterConfigRow,
+  FuelLensVisit as FuelLensVisitRow,
 } from "@prisma/client";
 import type {
   Client,
@@ -15,6 +16,7 @@ import type {
   TreatmentSystem,
   TreatmentWell,
   ParameterConfig,
+  FuelLensVisit,
 } from "@field-monitoring/shared";
 
 // Row -> shared-type payload (what the client sees over the wire).
@@ -103,6 +105,14 @@ export function treatmentWellRowToPayload(row: TreatmentWellRow): TreatmentWell 
   };
 }
 
+// FuelLensVisit stores its full shape in the `data` JSON column (see
+// docs/data-model.md section 9) — id/wellId/visitDate columns exist for
+// indexing/relations, but `data` is the single source of truth for the
+// payload, so there's nothing to reassemble here.
+export function fuelLensVisitRowToPayload(row: FuelLensVisitRow): FuelLensVisit {
+  return row.data as unknown as FuelLensVisit;
+}
+
 // Shared-type payload -> Prisma scalar column data (for create/update).
 
 export function clientToRowData(payload: Client) {
@@ -189,5 +199,14 @@ export function treatmentWellToRowData(payload: TreatmentWell) {
     screenFrom: payload.screenInterval.from,
     screenTo: payload.screenInterval.to,
     wellType: payload.wellType,
+  };
+}
+
+export function fuelLensVisitToRowData(payload: FuelLensVisit) {
+  return {
+    id: payload.id,
+    wellId: payload.wellId,
+    visitDate: new Date(payload.visitDate),
+    data: payload as unknown as object,
   };
 }

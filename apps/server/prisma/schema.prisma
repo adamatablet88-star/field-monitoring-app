@@ -5,12 +5,13 @@
 // they get fully relational columns once each field form is implemented
 // (roadmap steps 4-6), so the schema doesn't need to be re-guessed twice.
 //
-// Client, Site, Well, Tank, TreatmentSystem, TreatmentWell and
-// ParameterConfig additionally carry `version`/`updatedAt`/`deletedAt` —
-// sync bookkeeping used by the optimistic-concurrency push/pull endpoints
-// in src/sync (roadmap steps 2-3). These are server-side only; they're
-// deliberately absent from the shared domain types in packages/shared,
-// which describe entity shape, not sync state.
+// Client, Site, Well, Tank, TreatmentSystem, TreatmentWell,
+// ParameterConfig and FuelLensVisit additionally carry
+// `version`/`updatedAt`/`deletedAt` — sync bookkeeping used by the
+// optimistic-concurrency push/pull endpoints in src/sync (roadmap steps
+// 2-4). These are server-side only; they're deliberately absent from the
+// shared domain types in packages/shared, which describe entity shape,
+// not sync state.
 
 generator client {
   provider = "prisma-client-js"
@@ -186,9 +187,14 @@ model FuelLensVisit {
   wellId    String
   well      Well     @relation(fields: [wellId], references: [id])
   visitDate DateTime
-  data      Json // shape: FuelLensVisit in packages/shared/src/visits.ts
+  data      Json // full shape: FuelLensVisit in packages/shared/src/visits.ts
+
+  version   Int       @default(1)
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   @@index([wellId])
+  @@index([updatedAt])
 }
 
 model SveSystemVisit {

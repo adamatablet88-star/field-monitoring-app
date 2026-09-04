@@ -27,6 +27,8 @@ function tableFor(entityType: SyncEntityType): Table<{ id: string }, string> {
       return db.treatmentWells as unknown as Table<{ id: string }, string>;
     case "parameterConfig":
       return db.parameterConfigs as unknown as Table<{ id: string }, string>;
+    case "fuelLensVisit":
+      return db.fuelLensVisits as unknown as Table<{ id: string }, string>;
   }
 }
 
@@ -39,6 +41,14 @@ function metaKey(entityType: SyncEntityType, entityId: string): string {
  * the outbox for the next sync round. `baseVersion` is read from the
  * local sync-meta cache — null means "not yet known to the server",
  * which the push endpoint requires for "create".
+ *
+ * Coalesces with an already-pending outbox entry for the same entity
+ * instead of adding a second one. Without this, editing an entity twice
+ * before its first sync round-trip (e.g. create, then fix a typo, then
+ * sync) would queue a "create" and an "update" together; the update's
+ * baseVersion is captured as null (nothing confirmed by the server yet),
+ * so it would come back a spurious conflict against the version the
+ * create itself had just been assigned in the same push batch.
  */
 export async function enqueueChange(
   entityType: SyncEntityType,
@@ -55,6 +65,27 @@ export async function enqueueChange(
     } else {
       await table.put(entity);
     }
+
+    const existingPending = await db.outbox
+      .where("entityId")
+      .equals(entity.id)
+      .filter((e) => e.entityType === entityType && e.status === "pending")
+      .first();
+
+    if (existingPending?.id !== undefined) {
+      if (existingPending.operation === "create" && operation === "delete") {
+        // Never reached the server — nothing to tell it.
+        await db.outbox.delete(existingPending.id);
+        return;
+      }
+      await db.outbox.update(existingPending.id, {
+        operation: existingPending.operation === "create" ? "create" : operation,
+        payload: operation === "delete" ? undefined : entity,
+        createdAt: new Date().toISOString(),
+      });
+      return;
+    }
+
     await db.outbox.add({
       entityType,
       entityId: entity.id,
@@ -100,10 +131,13 @@ export async function pushPending(): Promise<PushSummary> {
 
   const summary: PushSummary = { applied: 0, conflicts: 0, errors: 0 };
 
-  for (const result of results) {
-    const outboxEntry = pending.find(
-      (entry) => entry.entityType === result.entityType && entry.entityId === result.entityId,
-    );
+  // Matched by position, not by (entityType, entityId): the server
+  // processes `entries` in the order sent and returns one result per
+  // entry in that same order, so this stays correct even if `pending`
+  // somehow held more than one entry for the same entity.
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i];
+    const outboxEntry = pending[i];
     if (!outboxEntry?.id) continue;
 
     if (result.status === "applied") {

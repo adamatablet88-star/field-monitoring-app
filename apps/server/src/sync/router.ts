@@ -22,6 +22,8 @@ import {
   treatmentWellToRowData,
   parameterConfigRowToShared,
   parameterConfigToRowData,
+  fuelLensVisitRowToPayload,
+  fuelLensVisitToRowData,
 } from "./mapping.js";
 
 interface SyncableRow {
@@ -135,6 +137,20 @@ const handlers: Record<SyncEntityType, EntityHandler> = {
       }),
     softDelete: (id) =>
       prisma.parameterConfig.update({ where: { id }, data: { deletedAt: new Date(), version: { increment: 1 } } }),
+  },
+  fuelLensVisit: {
+    toPayload: (row) => fuelLensVisitRowToPayload(row as Parameters<typeof fuelLensVisitRowToPayload>[0]),
+    toRowData: (payload) => fuelLensVisitToRowData(payload as Parameters<typeof fuelLensVisitToRowData>[0]),
+    findUnique: (id) => prisma.fuelLensVisit.findUnique({ where: { id } }),
+    create: (data) =>
+      prisma.fuelLensVisit.create({ data: data as Parameters<typeof prisma.fuelLensVisit.create>[0]["data"] }),
+    update: (id, data) =>
+      prisma.fuelLensVisit.update({
+        where: { id },
+        data: { ...data, version: { increment: 1 } } as Parameters<typeof prisma.fuelLensVisit.update>[0]["data"],
+      }),
+    softDelete: (id) =>
+      prisma.fuelLensVisit.update({ where: { id }, data: { deletedAt: new Date(), version: { increment: 1 } } }),
   },
 };
 
@@ -250,15 +266,17 @@ syncRouter.get("/sync/pull", async (req, res) => {
   const updatedAtFilter = since ? { updatedAt: { gt: since } } : {};
   const serverTime = new Date();
 
-  const [clients, sites, wells, tanks, treatmentSystems, treatmentWells, parameterConfigs] = await Promise.all([
-    prisma.client.findMany({ where: updatedAtFilter }),
-    prisma.site.findMany({ where: updatedAtFilter }),
-    prisma.well.findMany({ where: updatedAtFilter }),
-    prisma.tank.findMany({ where: updatedAtFilter, include: tankInclude }),
-    prisma.treatmentSystem.findMany({ where: updatedAtFilter, include: treatmentSystemInclude }),
-    prisma.treatmentWell.findMany({ where: updatedAtFilter }),
-    prisma.parameterConfig.findMany({ where: updatedAtFilter }),
-  ]);
+  const [clients, sites, wells, tanks, treatmentSystems, treatmentWells, parameterConfigs, fuelLensVisits] =
+    await Promise.all([
+      prisma.client.findMany({ where: updatedAtFilter }),
+      prisma.site.findMany({ where: updatedAtFilter }),
+      prisma.well.findMany({ where: updatedAtFilter }),
+      prisma.tank.findMany({ where: updatedAtFilter, include: tankInclude }),
+      prisma.treatmentSystem.findMany({ where: updatedAtFilter, include: treatmentSystemInclude }),
+      prisma.treatmentWell.findMany({ where: updatedAtFilter }),
+      prisma.parameterConfig.findMany({ where: updatedAtFilter }),
+      prisma.fuelLensVisit.findMany({ where: updatedAtFilter }),
+    ]);
 
   const entities: SyncPullEntity[] = [
     ...clients.map((row) => toPullEntity("client", row, handlers.client.toPayload)),
@@ -268,6 +286,7 @@ syncRouter.get("/sync/pull", async (req, res) => {
     ...treatmentSystems.map((row) => toPullEntity("treatmentSystem", row, handlers.treatmentSystem.toPayload)),
     ...treatmentWells.map((row) => toPullEntity("treatmentWell", row, handlers.treatmentWell.toPayload)),
     ...parameterConfigs.map((row) => toPullEntity("parameterConfig", row, handlers.parameterConfig.toPayload)),
+    ...fuelLensVisits.map((row) => toPullEntity("fuelLensVisit", row, handlers.fuelLensVisit.toPayload)),
   ];
 
   const response: SyncPullResponse = { serverTime: serverTime.toISOString(), entities };
