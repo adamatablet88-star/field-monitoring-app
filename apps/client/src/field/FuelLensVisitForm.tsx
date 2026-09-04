@@ -8,13 +8,7 @@ import type {
 } from "@field-monitoring/shared";
 import { db } from "../db";
 import { newId, useLocalCollection } from "../admin/useLocalCollection";
-
-const NOT_MEASURED_REASON_LABELS: Record<NotMeasuredReason, string> = {
-  valve_closed: "שסתום סגור",
-  access_blocked: "גישה חסומה",
-  equipment_fault: "ציוד תקול",
-  other: "אחר",
-};
+import { NOT_MEASURED_REASON_LABELS } from "./labels";
 
 const EVACUATION_METHOD_LABELS: Record<EvacuationMethod, string> = {
   skimmer: "סקימר",

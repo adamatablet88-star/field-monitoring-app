@@ -44,11 +44,34 @@ export interface FuelLensVisit {
   photos?: string[];
 }
 
+/**
+ * One reading against a system's admin-defined ParameterConfig (see
+ * packages/shared/src/treatmentSystem.ts) — the extensibility hatch that
+ * lets a new gauge be added, critical threshold included, with zero code
+ * change. The system's fixed, well-known fields (below) don't need this;
+ * everything else does.
+ */
+export interface ParameterReading {
+  parameterId: string;
+  value: number;
+}
+
 // ---------------------------------------------------------------------------
 // SVE
 // ---------------------------------------------------------------------------
 
 export type SveVisitType = "small" | "large" | "baseline";
+
+/** Only collected during a "large" or "baseline" visit, per treatment-type TreatmentWell. */
+export interface SveWellVisit {
+  id: string;
+  treatmentWellId: string;
+  vacuum?: NotMeasuredField<number>;
+  pid?: NotMeasuredField<number>;
+  waterDepth?: NotMeasuredField<number>;
+  productDepth?: NotMeasuredField<number>;
+  bottomDepth?: NotMeasuredField<number>;
+}
 
 export interface SveSystemVisit {
   id: string;
@@ -64,7 +87,7 @@ export interface SveSystemVisit {
   catalystTemp?: { inlet: number; internal: number; outlet: number };
 
   /** "All unchanged" pre-fills from the previous visit; technician edits only what changed. */
-  manifold: Array<{ wellId: string; openPercent: number }>;
+  manifold: Array<{ treatmentWellId: string; openPercent: number }>;
 
   /** Stored as a negative value; technician enters a positive magnitude, converted automatically. */
   vacuumOverall: number;
@@ -81,23 +104,33 @@ export interface SveSystemVisit {
   efficiencyPercent: number;
 
   to15?: { done: boolean; date: string; canisterNumber: string; sampleTime: string };
-}
 
-/** Only collected during a "large" treatment visit, per treatment-type TreatmentWell. */
-export interface SveWellVisit {
-  id: string;
-  systemVisitId: string;
-  treatmentWellId: string;
-  vacuum?: NotMeasuredField<number>;
-  pid?: NotMeasuredField<number>;
-  waterDepth?: NotMeasuredField<number>;
-  productDepth?: NotMeasuredField<number>;
-  bottomDepth?: NotMeasuredField<number>;
+  /** Extra admin-configured parameters beyond the fixed fields above. */
+  extraReadings: ParameterReading[];
+
+  /** Only populated when visitType is "large" or "baseline". */
+  wellVisits: SveWellVisit[];
 }
 
 // ---------------------------------------------------------------------------
 // Bio-venting
 // ---------------------------------------------------------------------------
+
+export interface MonitoringPointDepthReading {
+  depth: number;
+  o2: number;
+  co2: number;
+  ch4: number;
+  pid: number;
+  vacuum: number;
+}
+
+/** A monitoring point can have a variable number of depths — flexible per-point config. */
+export interface MonitoringPointReading {
+  id: string;
+  pointCode: string;
+  depths: MonitoringPointDepthReading[];
+}
 
 export interface BioVentingSystemVisit {
   id: string;
@@ -112,28 +145,16 @@ export interface BioVentingSystemVisit {
   flowOverall: number;
   pressureOverall: number;
 
-  wells: Array<{ wellId: string; openPercent: number }>;
+  wells: Array<{ treatmentWellId: string; openPercent: number }>;
   /** Equivalent of SVE's VCV, but expressed as a percentage. */
   dilutionValvePercent: number;
 
   annualOxygenTest?: { done: boolean; date: string };
-}
 
-export interface MonitoringPointDepthReading {
-  depth: number;
-  o2: number;
-  co2: number;
-  ch4: number;
-  pid: number;
-  vacuum: number;
-}
+  /** Extra admin-configured parameters beyond the fixed fields above. */
+  extraReadings: ParameterReading[];
 
-/** A monitoring point can have a variable number of depths — flexible per-point config. */
-export interface MonitoringPointReading {
-  id: string;
-  systemVisitId: string;
-  pointCode: string;
-  depths: MonitoringPointDepthReading[];
+  monitoringPoints: MonitoringPointReading[];
 }
 
 // ---------------------------------------------------------------------------

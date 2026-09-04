@@ -12,7 +12,9 @@ export type SyncEntityType =
   | "treatmentSystem"
   | "treatmentWell"
   | "parameterConfig"
-  | "fuelLensVisit";
+  | "fuelLensVisit"
+  | "sveSystemVisit"
+  | "bioVentingSystemVisit";
 export type SyncOperation = "create" | "update" | "delete";
 
 export interface SyncPushEntry {

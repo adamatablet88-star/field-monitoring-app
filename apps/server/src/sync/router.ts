@@ -24,6 +24,10 @@ import {
   parameterConfigToRowData,
   fuelLensVisitRowToPayload,
   fuelLensVisitToRowData,
+  sveSystemVisitRowToPayload,
+  sveSystemVisitToRowData,
+  bioVentingSystemVisitRowToPayload,
+  bioVentingSystemVisitToRowData,
 } from "./mapping.js";
 
 interface SyncableRow {
@@ -152,6 +156,38 @@ const handlers: Record<SyncEntityType, EntityHandler> = {
     softDelete: (id) =>
       prisma.fuelLensVisit.update({ where: { id }, data: { deletedAt: new Date(), version: { increment: 1 } } }),
   },
+  sveSystemVisit: {
+    toPayload: (row) => sveSystemVisitRowToPayload(row as Parameters<typeof sveSystemVisitRowToPayload>[0]),
+    toRowData: (payload) => sveSystemVisitToRowData(payload as Parameters<typeof sveSystemVisitToRowData>[0]),
+    findUnique: (id) => prisma.sveSystemVisit.findUnique({ where: { id } }),
+    create: (data) =>
+      prisma.sveSystemVisit.create({ data: data as Parameters<typeof prisma.sveSystemVisit.create>[0]["data"] }),
+    update: (id, data) =>
+      prisma.sveSystemVisit.update({
+        where: { id },
+        data: { ...data, version: { increment: 1 } } as Parameters<typeof prisma.sveSystemVisit.update>[0]["data"],
+      }),
+    softDelete: (id) =>
+      prisma.sveSystemVisit.update({ where: { id }, data: { deletedAt: new Date(), version: { increment: 1 } } }),
+  },
+  bioVentingSystemVisit: {
+    toPayload: (row) =>
+      bioVentingSystemVisitRowToPayload(row as Parameters<typeof bioVentingSystemVisitRowToPayload>[0]),
+    toRowData: (payload) =>
+      bioVentingSystemVisitToRowData(payload as Parameters<typeof bioVentingSystemVisitToRowData>[0]),
+    findUnique: (id) => prisma.bioVentingSystemVisit.findUnique({ where: { id } }),
+    create: (data) =>
+      prisma.bioVentingSystemVisit.create({
+        data: data as Parameters<typeof prisma.bioVentingSystemVisit.create>[0]["data"],
+      }),
+    update: (id, data) =>
+      prisma.bioVentingSystemVisit.update({
+        where: { id },
+        data: { ...data, version: { increment: 1 } } as Parameters<typeof prisma.bioVentingSystemVisit.update>[0]["data"],
+      }),
+    softDelete: (id) =>
+      prisma.bioVentingSystemVisit.update({ where: { id }, data: { deletedAt: new Date(), version: { increment: 1 } } }),
+  },
 };
 
 function isPrismaUniqueViolation(err: unknown): boolean {
@@ -266,17 +302,29 @@ syncRouter.get("/sync/pull", async (req, res) => {
   const updatedAtFilter = since ? { updatedAt: { gt: since } } : {};
   const serverTime = new Date();
 
-  const [clients, sites, wells, tanks, treatmentSystems, treatmentWells, parameterConfigs, fuelLensVisits] =
-    await Promise.all([
-      prisma.client.findMany({ where: updatedAtFilter }),
-      prisma.site.findMany({ where: updatedAtFilter }),
-      prisma.well.findMany({ where: updatedAtFilter }),
-      prisma.tank.findMany({ where: updatedAtFilter, include: tankInclude }),
-      prisma.treatmentSystem.findMany({ where: updatedAtFilter, include: treatmentSystemInclude }),
-      prisma.treatmentWell.findMany({ where: updatedAtFilter }),
-      prisma.parameterConfig.findMany({ where: updatedAtFilter }),
-      prisma.fuelLensVisit.findMany({ where: updatedAtFilter }),
-    ]);
+  const [
+    clients,
+    sites,
+    wells,
+    tanks,
+    treatmentSystems,
+    treatmentWells,
+    parameterConfigs,
+    fuelLensVisits,
+    sveSystemVisits,
+    bioVentingSystemVisits,
+  ] = await Promise.all([
+    prisma.client.findMany({ where: updatedAtFilter }),
+    prisma.site.findMany({ where: updatedAtFilter }),
+    prisma.well.findMany({ where: updatedAtFilter }),
+    prisma.tank.findMany({ where: updatedAtFilter, include: tankInclude }),
+    prisma.treatmentSystem.findMany({ where: updatedAtFilter, include: treatmentSystemInclude }),
+    prisma.treatmentWell.findMany({ where: updatedAtFilter }),
+    prisma.parameterConfig.findMany({ where: updatedAtFilter }),
+    prisma.fuelLensVisit.findMany({ where: updatedAtFilter }),
+    prisma.sveSystemVisit.findMany({ where: updatedAtFilter }),
+    prisma.bioVentingSystemVisit.findMany({ where: updatedAtFilter }),
+  ]);
 
   const entities: SyncPullEntity[] = [
     ...clients.map((row) => toPullEntity("client", row, handlers.client.toPayload)),
@@ -287,6 +335,10 @@ syncRouter.get("/sync/pull", async (req, res) => {
     ...treatmentWells.map((row) => toPullEntity("treatmentWell", row, handlers.treatmentWell.toPayload)),
     ...parameterConfigs.map((row) => toPullEntity("parameterConfig", row, handlers.parameterConfig.toPayload)),
     ...fuelLensVisits.map((row) => toPullEntity("fuelLensVisit", row, handlers.fuelLensVisit.toPayload)),
+    ...sveSystemVisits.map((row) => toPullEntity("sveSystemVisit", row, handlers.sveSystemVisit.toPayload)),
+    ...bioVentingSystemVisits.map((row) =>
+      toPullEntity("bioVentingSystemVisit", row, handlers.bioVentingSystemVisit.toPayload),
+    ),
   ];
 
   const response: SyncPullResponse = { serverTime: serverTime.toISOString(), entities };

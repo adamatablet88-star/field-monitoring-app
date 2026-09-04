@@ -58,3 +58,71 @@
   border-color: #2563eb;
   color: #fff;
 }
+
+.critical-banner {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-weight: 600;
+  margin: 0.25rem 0;
+}
+
+.not-measured-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.checkbox-label.small {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.well-visit-details {
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  margin: 0.5rem 0;
+}
+
+.well-visit-details summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.manifold-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.25rem 0;
+}
+
+.manifold-row input {
+  width: 5rem;
+}
+
+.monitoring-point {
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  margin: 0.5rem 0;
+}
+
+.depth-row {
+  flex-wrap: wrap;
+  align-items: end;
+  border-top: 1px dashed #ddd;
+  padding-top: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.depth-row label {
+  min-width: 5rem;
+}
+
+.parameter-reading-row {
+  margin: 0.5rem 0;
+}

@@ -8,6 +8,8 @@ import type {
   TreatmentWell,
   ParameterConfig,
   FuelLensVisit,
+  SveSystemVisit,
+  BioVentingSystemVisit,
   SyncEntityType,
   SyncOperation,
 } from "@field-monitoring/shared";
@@ -55,6 +57,8 @@ class FieldMonitoringDB extends Dexie {
   treatmentWells!: EntityTable<TreatmentWell, "id">;
   parameterConfigs!: EntityTable<ParameterConfig, "id">;
   fuelLensVisits!: EntityTable<FuelLensVisit, "id">;
+  sveSystemVisits!: EntityTable<SveSystemVisit, "id">;
+  bioVentingSystemVisits!: EntityTable<BioVentingSystemVisit, "id">;
   outbox!: EntityTable<OutboxEntry, "id">;
   syncMeta!: EntityTable<SyncMetaRecord, "key">;
 
@@ -69,6 +73,8 @@ class FieldMonitoringDB extends Dexie {
       treatmentWells: "id, systemId, code, wellType",
       parameterConfigs: "id, systemId, order",
       fuelLensVisits: "id, wellId, visitDate",
+      sveSystemVisits: "id, systemId, visitDate",
+      bioVentingSystemVisits: "id, systemId, visitDate",
       outbox: "++id, entityType, entityId, status, createdAt",
       syncMeta: "key, entityType, entityId",
     });

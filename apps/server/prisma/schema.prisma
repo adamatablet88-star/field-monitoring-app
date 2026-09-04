@@ -6,12 +6,12 @@
 // (roadmap steps 4-6), so the schema doesn't need to be re-guessed twice.
 //
 // Client, Site, Well, Tank, TreatmentSystem, TreatmentWell,
-// ParameterConfig and FuelLensVisit additionally carry
-// `version`/`updatedAt`/`deletedAt` — sync bookkeeping used by the
-// optimistic-concurrency push/pull endpoints in src/sync (roadmap steps
-// 2-4). These are server-side only; they're deliberately absent from the
-// shared domain types in packages/shared, which describe entity shape,
-// not sync state.
+// ParameterConfig, FuelLensVisit, SveSystemVisit and
+// BioVentingSystemVisit additionally carry `version`/`updatedAt`/
+// `deletedAt` — sync bookkeeping used by the optimistic-concurrency
+// push/pull endpoints in src/sync (roadmap steps 2-5). These are
+// server-side only; they're deliberately absent from the shared domain
+// types in packages/shared, which describe entity shape, not sync state.
 
 generator client {
   provider = "prisma-client-js"
@@ -203,9 +203,14 @@ model SveSystemVisit {
   system    TreatmentSystem @relation(fields: [systemId], references: [id])
   visitDate DateTime
   visitType String // "small" | "large" | "baseline"
-  data      Json // shape: SveSystemVisit / SveWellVisit[] in packages/shared/src/visits.ts
+  data      Json // full shape (incl. nested wellVisits): SveSystemVisit in packages/shared/src/visits.ts
+
+  version   Int       @default(1)
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   @@index([systemId])
+  @@index([updatedAt])
 }
 
 model BioVentingSystemVisit {
@@ -213,9 +218,14 @@ model BioVentingSystemVisit {
   systemId  String
   system    TreatmentSystem @relation(fields: [systemId], references: [id])
   visitDate DateTime
-  data      Json // shape: BioVentingSystemVisit / MonitoringPointReading[] in packages/shared/src/visits.ts
+  data      Json // full shape (incl. nested monitoringPoints): BioVentingSystemVisit in packages/shared/src/visits.ts
+
+  version   Int       @default(1)
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   @@index([systemId])
+  @@index([updatedAt])
 }
 
 model GroundwaterVisit {

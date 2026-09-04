@@ -7,6 +7,8 @@ import type {
   TreatmentWell as TreatmentWellRow,
   ParameterConfig as ParameterConfigRow,
   FuelLensVisit as FuelLensVisitRow,
+  SveSystemVisit as SveSystemVisitRow,
+  BioVentingSystemVisit as BioVentingSystemVisitRow,
 } from "@prisma/client";
 import type {
   Client,
@@ -17,6 +19,8 @@ import type {
   TreatmentWell,
   ParameterConfig,
   FuelLensVisit,
+  SveSystemVisit,
+  BioVentingSystemVisit,
 } from "@field-monitoring/shared";
 
 // Row -> shared-type payload (what the client sees over the wire).
@@ -113,6 +117,15 @@ export function fuelLensVisitRowToPayload(row: FuelLensVisitRow): FuelLensVisit 
   return row.data as unknown as FuelLensVisit;
 }
 
+// Same pattern as FuelLensVisit: `data` is the single source of truth.
+export function sveSystemVisitRowToPayload(row: SveSystemVisitRow): SveSystemVisit {
+  return row.data as unknown as SveSystemVisit;
+}
+
+export function bioVentingSystemVisitRowToPayload(row: BioVentingSystemVisitRow): BioVentingSystemVisit {
+  return row.data as unknown as BioVentingSystemVisit;
+}
+
 // Shared-type payload -> Prisma scalar column data (for create/update).
 
 export function clientToRowData(payload: Client) {
@@ -206,6 +219,25 @@ export function fuelLensVisitToRowData(payload: FuelLensVisit) {
   return {
     id: payload.id,
     wellId: payload.wellId,
+    visitDate: new Date(payload.visitDate),
+    data: payload as unknown as object,
+  };
+}
+
+export function sveSystemVisitToRowData(payload: SveSystemVisit) {
+  return {
+    id: payload.id,
+    systemId: payload.systemId,
+    visitDate: new Date(payload.visitDate),
+    visitType: payload.visitType,
+    data: payload as unknown as object,
+  };
+}
+
+export function bioVentingSystemVisitToRowData(payload: BioVentingSystemVisit) {
+  return {
+    id: payload.id,
+    systemId: payload.systemId,
     visitDate: new Date(payload.visitDate),
     data: payload as unknown as object,
   };

@@ -29,6 +29,10 @@ function tableFor(entityType: SyncEntityType): Table<{ id: string }, string> {
       return db.parameterConfigs as unknown as Table<{ id: string }, string>;
     case "fuelLensVisit":
       return db.fuelLensVisits as unknown as Table<{ id: string }, string>;
+    case "sveSystemVisit":
+      return db.sveSystemVisits as unknown as Table<{ id: string }, string>;
+    case "bioVentingSystemVisit":
+      return db.bioVentingSystemVisits as unknown as Table<{ id: string }, string>;
   }
 }
 
