@@ -5,6 +5,7 @@ import { db } from "./db";
 import { runSync, type SyncSummary } from "./sync";
 import { AdminApp } from "./admin/AdminApp";
 import { FieldApp } from "./field/FieldApp";
+import { ConflictsPanel } from "./sync/ConflictsPanel";
 import { LoginForm } from "./auth/LoginForm";
 import { getStoredUser, clearAuth } from "./auth/authStore";
 import "./App.css";
@@ -20,6 +21,7 @@ function App() {
   const [lastSync, setLastSync] = useState<SyncSummary | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [mainTab, setMainTab] = useState<MainTab>("field");
+  const [conflictsOpen, setConflictsOpen] = useState(false);
 
   useEffect(() => {
     db.open()
@@ -92,12 +94,18 @@ function App() {
         <button type="button" onClick={handleSyncNow} disabled={syncing}>
           {syncing ? "מסנכרן..." : "סנכרן עכשיו"}
         </button>
+        {(conflictCount > 0 || conflictsOpen) && (
+          <button type="button" onClick={() => setConflictsOpen((open) => !open)}>
+            {conflictsOpen ? "הסתר קונפליקטים" : "פתרון קונפליקטים"}
+          </button>
+        )}
         {lastSync && (
           <p className="sync-summary">
             עודכן: {lastSync.applied} הצליחו · {lastSync.conflicts} קונפליקטים · {lastSync.errors} שגיאות · {lastSync.pulled} התקבלו מהשרת
           </p>
         )}
         {syncError && <p className="sync-error">שגיאת סנכרון: {syncError}</p>}
+        {conflictsOpen && <ConflictsPanel />}
       </section>
 
       <nav className="tab-bar main-tab-bar">

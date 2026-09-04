@@ -33,6 +33,17 @@ export interface OutboxEntry {
   createdAt: string;
   status: "pending" | "conflict" | "error";
   message?: string;
+  /**
+   * Captured from the push result when status is "conflict" — the
+   * server's current state at the time of the conflict, so the
+   * conflict-resolution UI (roadmap step 8) can show a local-vs-server
+   * comparison without a network round-trip. Undefined for a create
+   * conflict where the server has no comparable row (see
+   * apps/server/src/sync/router.ts's unique-violation branch).
+   */
+  serverPayload?: unknown;
+  serverVersion?: number;
+  serverUpdatedAt?: string;
 }
 
 /**

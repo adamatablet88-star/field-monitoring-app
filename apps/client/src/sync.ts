@@ -181,6 +181,9 @@ export async function pushPending(): Promise<PushSummary> {
       await db.outbox.update(outboxEntry.id, {
         status: "conflict",
         message: result.message ?? "הערך עודכן בשרת מאז — יש לבדוק ולפתור את הקונפליקט",
+        serverPayload: result.serverPayload,
+        serverVersion: result.version,
+        serverUpdatedAt: result.updatedAt,
       });
     } else {
       summary.errors += 1;
@@ -236,4 +239,78 @@ export async function runSync(): Promise<SyncSummary> {
   const pushSummary = await pushPending();
   const pullSummary = await pullUpdates();
   return { ...pushSummary, ...pullSummary };
+}
+
+/**
+ * Conflict resolution (roadmap step 8). Detection has existed since step 2
+ * (a version mismatch on push); these three actions are the "conscious
+ * decision" the architecture doc requires before any conflicting write is
+ * allowed to take effect — see docs/architecture.md's "נעילה ופתרון
+ * קונפליקטים". The UI (ConflictsPanel) always shows the local vs. server
+ * values first and lets the user pick one of these.
+ */
+
+/**
+ * "השתמש בגרסה שלי": re-queues the local change against the server's
+ * current version so the next sync round applies it, overwriting what's
+ * on the server. Does not touch the local domain table — it already holds
+ * the local value.
+ */
+export async function resolveConflictKeepMine(outboxId: number): Promise<void> {
+  const entry = await db.outbox.get(outboxId);
+  if (!entry || entry.status !== "conflict") return;
+
+  const table = tableFor(entry.entityType);
+  await db.transaction("rw", table, db.outbox, async () => {
+    // A pull that ran as part of the same sync round that detected this
+    // conflict may already have overwritten the local mirror with the
+    // server's (about-to-be-discarded) value — reassert "mine" so the UI
+    // reflects the chosen side immediately, not just once the resend lands.
+    if (entry.operation !== "delete" && entry.payload !== undefined) {
+      await table.put(entry.payload as { id: string });
+    }
+    await db.outbox.update(outboxId, {
+      status: "pending",
+      baseVersion: entry.serverVersion ?? entry.baseVersion,
+      message: undefined,
+      serverPayload: undefined,
+      serverVersion: undefined,
+      serverUpdatedAt: undefined,
+    });
+  });
+}
+
+/**
+ * "השתמש בגרסת השרת": discards the local change and overwrites the local
+ * mirror with the server's state that was captured at conflict time, so
+ * the UI reflects it immediately without waiting for the next pull.
+ */
+export async function resolveConflictKeepServer(outboxId: number): Promise<void> {
+  const entry = await db.outbox.get(outboxId);
+  if (!entry) return;
+
+  if (entry.serverPayload !== undefined && entry.serverPayload !== null) {
+    const table = tableFor(entry.entityType);
+    await db.transaction("rw", table, db.outbox, db.syncMeta, async () => {
+      await table.put(entry.serverPayload as { id: string });
+      await db.syncMeta.put({
+        key: metaKey(entry.entityType, entry.entityId),
+        entityType: entry.entityType,
+        entityId: entry.entityId,
+        version: entry.serverVersion ?? 1,
+        updatedAt: entry.serverUpdatedAt ?? new Date().toISOString(),
+        deleted: false,
+      });
+      await db.outbox.delete(outboxId);
+    });
+  } else {
+    // Create-conflict with no comparable server row (e.g. a unique-field
+    // clash) — nothing to copy locally, just drop the queued change.
+    await db.outbox.delete(outboxId);
+  }
+}
+
+/** Drops a conflicted outbox entry without applying either side — used when the user will re-enter the change by hand. */
+export async function discardConflict(outboxId: number): Promise<void> {
+  await db.outbox.delete(outboxId);
 }

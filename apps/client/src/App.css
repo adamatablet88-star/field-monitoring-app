@@ -64,3 +64,58 @@ code {
   margin-top: 1.5rem;
   text-align: right;
 }
+
+.conflicts-panel {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.conflict-card {
+  border: 1px solid #f0b0b0;
+  background: #fff7f7;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+.conflict-card h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1rem;
+}
+
+.conflict-message {
+  color: #7a1f1f;
+  font-size: 0.9rem;
+  margin: 0 0 0.6rem;
+}
+
+.conflict-diff {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  margin-bottom: 0.6rem;
+}
+
+.conflict-diff th,
+.conflict-diff td {
+  border: 1px solid #ddd;
+  padding: 0.3rem 0.5rem;
+  text-align: right;
+  vertical-align: top;
+  word-break: break-word;
+}
+
+.conflict-diff th {
+  background: #f5f5f5;
+}
+
+.conflict-diff tr.diff-changed td {
+  background: #fff1c2;
+}
+
+.conflict-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
