@@ -11,3 +11,4 @@ export * from "./visits.js";
 export * from "./admin.js";
 export * from "./user.js";
 export * from "./sync.js";
+export * from "./auth.js";

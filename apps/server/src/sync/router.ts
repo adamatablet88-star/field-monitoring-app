@@ -7,6 +7,9 @@ import type {
   SyncPushResult,
 } from "@field-monitoring/shared";
 import { prisma } from "../prisma.js";
+import { requireAuth } from "../auth/middleware.js";
+import type { AuthTokenPayload } from "../auth/jwt.js";
+import { checkPermission, VISIT_ENTITY_TYPES } from "./permissions.js";
 import {
   clientRowToPayload,
   clientToRowData,
@@ -39,6 +42,8 @@ interface SyncableRow {
   version: number;
   updatedAt: Date;
   deletedAt: Date | null;
+  createdBy?: string | null;
+  createdAt?: Date;
 }
 
 interface EntityHandler {
@@ -226,7 +231,7 @@ function isPrismaUniqueViolation(err: unknown): boolean {
   return typeof err === "object" && err !== null && "code" in err && (err as { code: unknown }).code === "P2002";
 }
 
-async function processEntry(entry: SyncPushEntry): Promise<SyncPushResult> {
+async function processEntry(entry: SyncPushEntry, user: AuthTokenPayload): Promise<SyncPushResult> {
   const handler = handlers[entry.entityType];
   if (!handler) {
     return { entityType: entry.entityType, entityId: entry.entityId, status: "error", message: "unknown entityType" };
@@ -234,8 +239,15 @@ async function processEntry(entry: SyncPushEntry): Promise<SyncPushResult> {
 
   try {
     if (entry.operation === "create") {
+      const permission = checkPermission(entry.entityType, "create", user, null);
+      if (!permission.allowed) {
+        return { entityType: entry.entityType, entityId: entry.entityId, status: "error", message: permission.message };
+      }
       const data = handler.toRowData(entry.payload);
-      const row = await handler.create(data);
+      // Ownership is stamped by the server from the authenticated user, never
+      // trusted from the client payload — see checkPermission's same-day-own-visit rule.
+      const dataWithAudit = VISIT_ENTITY_TYPES.has(entry.entityType) ? { ...data, createdBy: user.sub } : data;
+      const row = await handler.create(dataWithAudit);
       return {
         entityType: entry.entityType,
         entityId: entry.entityId,
@@ -248,6 +260,11 @@ async function processEntry(entry: SyncPushEntry): Promise<SyncPushResult> {
     const existing = await handler.findUnique(entry.entityId);
     if (!existing || existing.deletedAt) {
       return { entityType: entry.entityType, entityId: entry.entityId, status: "error", message: "entity not found" };
+    }
+
+    const permission = checkPermission(entry.entityType, entry.operation, user, existing);
+    if (!permission.allowed) {
+      return { entityType: entry.entityType, entityId: entry.entityId, status: "error", message: permission.message };
     }
 
     if (existing.version !== entry.baseVersion) {
@@ -315,6 +332,7 @@ function toPullEntity(entityType: SyncEntityType, row: SyncableRow, toPayload: (
 }
 
 export const syncRouter = Router();
+syncRouter.use(requireAuth);
 
 syncRouter.post("/sync/push", async (req, res) => {
   const entries = Array.isArray(req.body?.entries) ? (req.body.entries as SyncPushEntry[]) : [];
@@ -323,7 +341,7 @@ syncRouter.post("/sync/push", async (req, res) => {
   // (e.g. an update following a create), and version checks must see
   // each other's effects in order.
   for (const entry of entries) {
-    results.push(await processEntry(entry));
+    results.push(await processEntry(entry, req.user as AuthTokenPayload));
   }
   res.json({ results });
 });

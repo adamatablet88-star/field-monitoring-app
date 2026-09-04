@@ -1,0 +1,15 @@
+-- AlterTable
+ALTER TABLE "BioVentingSystemVisit" ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN     "createdBy" TEXT;
+
+-- AlterTable
+ALTER TABLE "FuelLensVisit" ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN     "createdBy" TEXT;
+
+-- AlterTable
+ALTER TABLE "GroundwaterVisit" ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN     "createdBy" TEXT;
+
+-- AlterTable
+ALTER TABLE "SveSystemVisit" ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN     "createdBy" TEXT;

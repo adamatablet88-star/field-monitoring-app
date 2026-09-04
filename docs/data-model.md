@@ -365,6 +365,14 @@ interface User {
 }
 ```
 
+ממומש ואכוף בפועל (roadmap שלב 7): `PublicUser` (ללא `passwordHash`)
+הוא מה שחוזר מ-`POST /auth/login` ומ-`GET /auth/users` —
+`packages/shared/src/auth.ts`. אכיפת ה-RBAC בפועל
+(`apps/server/src/sync/permissions.ts`) מבוססת על `createdBy`/
+`createdAt` שנוספו לארבע טבלאות הביקור בשרת בלבד (כמו `version`/
+`updatedAt`/`deletedAt` — לא בטיפוסים המשותפים), נקבעים תמיד מהמשתמש
+המאומת בזמן היצירה ולא מגוף הבקשה.
+
 ## 12. מדיניות ולידציה — סיכום גורף
 
 | עיקרון | החלטה |

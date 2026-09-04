@@ -13,6 +13,11 @@
 // 2-6). These are server-side only; they're deliberately absent from the
 // shared domain types in packages/shared, which describe entity shape,
 // not sync state.
+//
+// The four visit models additionally carry `createdBy`/`createdAt`,
+// set by the server from the authenticated user at creation time (never
+// trusted from the request body) — RBAC in src/auth uses them to let a
+// technician edit only visits they created, same day (roadmap step 7).
 
 generator client {
   provider = "prisma-client-js"
@@ -219,6 +224,8 @@ model FuelLensVisit {
   version   Int       @default(1)
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+  createdBy String?
+  createdAt DateTime  @default(now())
 
   @@index([wellId])
   @@index([updatedAt])
@@ -235,6 +242,8 @@ model SveSystemVisit {
   version   Int       @default(1)
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+  createdBy String?
+  createdAt DateTime  @default(now())
 
   @@index([systemId])
   @@index([updatedAt])
@@ -250,6 +259,8 @@ model BioVentingSystemVisit {
   version   Int       @default(1)
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+  createdBy String?
+  createdAt DateTime  @default(now())
 
   @@index([systemId])
   @@index([updatedAt])
@@ -265,6 +276,8 @@ model GroundwaterVisit {
   version   Int       @default(1)
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+  createdBy String?
+  createdAt DateTime  @default(now())
 
   @@index([wellId])
   @@index([updatedAt])

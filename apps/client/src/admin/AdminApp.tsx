@@ -9,11 +9,14 @@ import { TanksPanel } from "./TanksPanel";
 import { TreatmentSystemsPanel } from "./TreatmentSystemsPanel";
 import { TreatmentSystemDetail } from "./TreatmentSystemDetail";
 import { GroundwaterWellsPanel } from "./GroundwaterWellsPanel";
+import { UsersPanel } from "./UsersPanel";
 import "./admin.css";
 
 type Tab = "wells" | "tanks" | "systems" | "groundwater";
+type Section = "structure" | "users";
 
 export function AdminApp() {
+  const [section, setSection] = useState<Section>("structure");
   const [clientId, setClientId] = useState<string | null>(null);
   const [siteId, setSiteId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("wells");
@@ -37,44 +40,71 @@ export function AdminApp() {
     <div className="admin-app">
       <h1>הקמת אתר</h1>
 
-      <ClientsPanel selectedClientId={clientId} onSelect={selectClient} />
+      <nav className="tab-bar">
+        <button type="button" className={section === "structure" ? "active" : ""} onClick={() => setSection("structure")}>
+          מבנה אתרים
+        </button>
+        <button type="button" className={section === "users" ? "active" : ""} onClick={() => setSection("users")}>
+          משתמשים
+        </button>
+      </nav>
 
-      {clientId && <SitesPanel clientId={clientId} selectedSiteId={siteId} onSelect={selectSite} />}
+      {section === "users" && <UsersPanel />}
 
-      {clientId && siteId && (
+      {section === "structure" && (
         <>
-          <nav className="tab-bar">
-            <button type="button" className={activeTab === "wells" ? "active" : ""} onClick={() => setActiveTab("wells")}>
-              קידוחי עדשת דלק
-            </button>
-            <button type="button" className={activeTab === "tanks" ? "active" : ""} onClick={() => setActiveTab("tanks")}>
-              מיכלים
-            </button>
-            <button
-              type="button"
-              className={activeTab === "systems" ? "active" : ""}
-              onClick={() => setActiveTab("systems")}
-            >
-              מערכות טיפול
-            </button>
-            <button
-              type="button"
-              className={activeTab === "groundwater" ? "active" : ""}
-              onClick={() => setActiveTab("groundwater")}
-            >
-              ניטור מי תהום
-            </button>
-          </nav>
+          <ClientsPanel selectedClientId={clientId} onSelect={selectClient} />
 
-          {activeTab === "wells" && <WellsPanel siteId={siteId} />}
-          {activeTab === "tanks" && <TanksPanel siteId={siteId} />}
-          {activeTab === "systems" && (
+          {clientId && <SitesPanel clientId={clientId} selectedSiteId={siteId} onSelect={selectSite} />}
+
+          {clientId && siteId && (
             <>
-              <TreatmentSystemsPanel siteId={siteId} selectedSystemId={selectedSystemId} onSelect={setSelectedSystemId} />
-              {selectedSystem && <TreatmentSystemDetail system={selectedSystem} />}
+              <nav className="tab-bar">
+                <button
+                  type="button"
+                  className={activeTab === "wells" ? "active" : ""}
+                  onClick={() => setActiveTab("wells")}
+                >
+                  קידוחי עדשת דלק
+                </button>
+                <button
+                  type="button"
+                  className={activeTab === "tanks" ? "active" : ""}
+                  onClick={() => setActiveTab("tanks")}
+                >
+                  מיכלים
+                </button>
+                <button
+                  type="button"
+                  className={activeTab === "systems" ? "active" : ""}
+                  onClick={() => setActiveTab("systems")}
+                >
+                  מערכות טיפול
+                </button>
+                <button
+                  type="button"
+                  className={activeTab === "groundwater" ? "active" : ""}
+                  onClick={() => setActiveTab("groundwater")}
+                >
+                  ניטור מי תהום
+                </button>
+              </nav>
+
+              {activeTab === "wells" && <WellsPanel siteId={siteId} />}
+              {activeTab === "tanks" && <TanksPanel siteId={siteId} />}
+              {activeTab === "systems" && (
+                <>
+                  <TreatmentSystemsPanel
+                    siteId={siteId}
+                    selectedSystemId={selectedSystemId}
+                    onSelect={setSelectedSystemId}
+                  />
+                  {selectedSystem && <TreatmentSystemDetail system={selectedSystem} />}
+                </>
+              )}
+              {activeTab === "groundwater" && <GroundwaterWellsPanel siteId={siteId} />}
             </>
           )}
-          {activeTab === "groundwater" && <GroundwaterWellsPanel siteId={siteId} />}
         </>
       )}
     </div>

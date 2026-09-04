@@ -7,9 +7,23 @@ import type {
   SyncPushResult,
 } from "@field-monitoring/shared";
 import { db } from "./db";
+import { API_BASE } from "./apiBase";
+import { clearAuth, getStoredToken } from "./auth/authStore";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3001";
 const LAST_PULLED_AT_KEY = "fieldMonitoring:lastPulledAt";
+
+function authHeaders(): Record<string, string> {
+  const token = getStoredToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+/** A 401 means the cached token is missing/expired — send the user back to login. */
+function handleUnauthorized(res: Response): void {
+  if (res.status === 401) {
+    clearAuth();
+    window.location.reload();
+  }
+}
 
 function tableFor(entityType: SyncEntityType): Table<{ id: string }, string> {
   switch (entityType) {
@@ -129,10 +143,11 @@ export async function pushPending(): Promise<PushSummary> {
 
   const res = await fetch(`${API_BASE}/sync/push`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify({ entries }),
   });
   if (!res.ok) {
+    handleUnauthorized(res);
     throw new Error(`sync push failed: HTTP ${res.status}`);
   }
   const { results } = (await res.json()) as { results: SyncPushResult[] };
@@ -182,8 +197,9 @@ export async function pullUpdates(): Promise<{ pulled: number }> {
   const url = new URL("/sync/pull", API_BASE);
   if (since) url.searchParams.set("since", since);
 
-  const res = await fetch(url);
+  const res = await fetch(url, { headers: authHeaders() });
   if (!res.ok) {
+    handleUnauthorized(res);
     throw new Error(`sync pull failed: HTTP ${res.status}`);
   }
   const { serverTime, entities } = (await res.json()) as SyncPullResponse;

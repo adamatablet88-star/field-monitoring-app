@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
 import { liveQuery } from "dexie";
+import type { PublicUser } from "@field-monitoring/shared";
 import { db } from "./db";
 import { runSync, type SyncSummary } from "./sync";
 import { AdminApp } from "./admin/AdminApp";
 import { FieldApp } from "./field/FieldApp";
+import { LoginForm } from "./auth/LoginForm";
+import { getStoredUser, clearAuth } from "./auth/authStore";
 import "./App.css";
 
 type MainTab = "field" | "admin";
 
 function App() {
+  const [user, setUser] = useState<PublicUser | null>(() => getStoredUser());
   const [dbReady, setDbReady] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const [conflictCount, setConflictCount] = useState(0);
@@ -47,10 +51,28 @@ function App() {
     }
   }
 
+  function handleLogout() {
+    clearAuth();
+    setUser(null);
+  }
+
+  if (!user) {
+    return <LoginForm onLogin={setUser} />;
+  }
+
   return (
     <main dir="rtl">
+      <div className="user-bar">
+        <span>
+          מחובר/ת כ-<strong>{user.username}</strong> ({user.role === "admin" ? "מנהל" : "טכנאי שטח"})
+        </span>
+        <button type="button" onClick={handleLogout}>
+          התנתק
+        </button>
+      </div>
+
       <h1>אפליקציית ניטור שטח</h1>
-      <p>שלד הפרויקט — ניטור עדשת דלק, מערכות SVE / Bio-venting ודיגום מי תהום.</p>
+      <p>ניטור עדשת דלק, מערכות SVE / Bio-venting ודיגום מי תהום.</p>
       <p>
         מסד נתונים מקומי (IndexedDB):{" "}
         <strong>{dbReady ? "מוכן" : "בטעינה..."}</strong>
@@ -78,21 +100,18 @@ function App() {
         {syncError && <p className="sync-error">שגיאת סנכרון: {syncError}</p>}
       </section>
 
-      <p className="hint">
-        טפסי SVE, Bio-venting ודיגום מי תהום עדיין לא מומשו — ראו{" "}
-        <code>docs/roadmap.md</code> בשורש המאגר לסדר הפיתוח המתוכנן.
-      </p>
-
       <nav className="tab-bar main-tab-bar">
         <button type="button" className={mainTab === "field" ? "active" : ""} onClick={() => setMainTab("field")}>
           טפסי שטח
         </button>
-        <button type="button" className={mainTab === "admin" ? "active" : ""} onClick={() => setMainTab("admin")}>
-          הקמת אתר
-        </button>
+        {user.role === "admin" && (
+          <button type="button" className={mainTab === "admin" ? "active" : ""} onClick={() => setMainTab("admin")}>
+            הקמת אתר
+          </button>
+        )}
       </nav>
 
-      {mainTab === "field" ? <FieldApp /> : <AdminApp />}
+      {mainTab === "admin" && user.role === "admin" ? <AdminApp /> : <FieldApp />}
     </main>
   );
 }
