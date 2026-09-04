@@ -21,17 +21,17 @@ npm run build:shared        # חובה לפני הרצת client/server — הם 
 
 # server
 cp apps/server/.env.example apps/server/.env   # ולהגדיר DATABASE_URL אמיתי
+cd apps/server && npx prisma migrate dev && cd ../..
 npm run dev:server
 
 # client (בטרמינל נפרד)
+cp apps/client/.env.example apps/client/.env   # ברירת המחדל כבר מצביעה ל-localhost:3001
 npm run dev:client
 ```
 
-השרת כרגע חושף רק `/health`; הלקוח מציג מסך שלד שמאמת שהמסד המקומי
-(IndexedDB) עולה בהצלחה. אין עדיין טפסי שטח, התחברות, או סנכרון אמיתי —
-ראו `docs/roadmap.md`.
-
-## מסמכי תכנון
+השרת חושף `/health` ו-`/sync/push` + `/sync/pull` (סנכרון בסיסי מול
+IndexedDB בלקוח — ראו `docs/architecture.md`). אין עדיין מסך הקמת אתר,
+טפסי שטח, או התחברות אמיתית — ראו `docs/roadmap.md`.
 
 ## מסמכי תכנון
 
@@ -55,7 +55,10 @@ npm run dev:client
 
 ## סטטוס
 
-שלד הפרויקט (roadmap שלב 1) קיים ורץ: מונורפו עם חבילת טיפוסים משותפת,
-שרת Express+Prisma עם סכמת PostgreSQL ראשונית, ולקוח React+Vite עם מסד
-מקומי (IndexedDB) פעיל. השלב הבא (ראו [roadmap](docs/roadmap.md)) הוא
-מימוש מסך הקמת האתר, מנגנון הסנכרון, וטפסי ההזנה בשטח.
+שלבים 1–2 ב-roadmap הושלמו: שלד הפרויקט (מונורפו, טיפוסים משותפים, שרת
+Express+Prisma, לקוח React+Vite עם IndexedDB) **וסנכרון בסיסי בין הלקוח
+לשרת** — כתיבה אופטימית + תור (`outbox`), `POST /sync/push` ו-
+`GET /sync/pull` עם זיהוי קונפליקטים מבוסס גרסאות (ללא ממשק פתרון
+קונפליקטים מלא עדיין). נבדק מקצה-לקצה מול Postgres ובדפדפן אמיתיים.
+השלב הבא (ראו [roadmap](docs/roadmap.md)) הוא מסך הקמת אתר/קידוחים/
+מערכות (Admin).

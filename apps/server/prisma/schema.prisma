@@ -4,6 +4,13 @@
 // column holding the shape defined in packages/shared/src/visits.ts —
 // they get fully relational columns once each field form is implemented
 // (roadmap steps 4-6), so the schema doesn't need to be re-guessed twice.
+//
+// Site, Well, Tank, TreatmentSystem and TreatmentWell additionally carry
+// `version`/`updatedAt`/`deletedAt` — sync bookkeeping used by the
+// optimistic-concurrency push/pull endpoints in src/sync (roadmap step 2).
+// These are server-side only; they're deliberately absent from the
+// shared domain types in packages/shared, which describe entity shape,
+// not sync state.
 
 generator client {
   provider = "prisma-client-js"
@@ -40,9 +47,15 @@ model Site {
   location       Json
   protocolTypes  String[] // "fuelLens" | "SVE" | "bioVenting" | "groundwater"
 
+  version   Int       @default(1)
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
   wells             Well[]
   tanks             Tank[]
   treatmentSystems  TreatmentSystem[]
+
+  @@index([updatedAt])
 }
 
 model Well {
@@ -66,9 +79,14 @@ model Well {
   tankId         String?
   tank           Tank?   @relation(fields: [tankId], references: [id])
 
+  version   Int       @default(1)
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
   fuelLensVisits FuelLensVisit[]
 
   @@index([siteId])
+  @@index([updatedAt])
 }
 
 model Tank {
@@ -77,6 +95,12 @@ model Tank {
   site   Site   @relation(fields: [siteId], references: [id])
   label  String
   wells  Well[]
+
+  version   Int       @default(1)
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([updatedAt])
 }
 
 model TreatmentSystem {
@@ -86,6 +110,10 @@ model TreatmentSystem {
   systemType  String // "SVE" | "bioVenting"
   systemLabel String
 
+  version   Int       @default(1)
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
   parameters ParameterConfig[]
   wells      TreatmentWell[]
 
@@ -93,6 +121,7 @@ model TreatmentSystem {
   bioVentingSystemVisits  BioVentingSystemVisit[]
 
   @@index([siteId])
+  @@index([updatedAt])
 }
 
 model ParameterConfig {
@@ -131,9 +160,14 @@ model TreatmentWell {
 
   wellType String // "treatment" | "monitoring" | "groundwater"
 
+  version   Int       @default(1)
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
   groundwaterVisits GroundwaterVisit[]
 
   @@index([systemId])
+  @@index([updatedAt])
 }
 
 model FuelLensVisit {

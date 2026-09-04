@@ -11,3 +11,28 @@ code {
   padding: 0.1rem 0.4rem;
   border-radius: 4px;
 }
+
+.sync-status {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.sync-status h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.conflict {
+  color: #b91c1c;
+}
+
+.sync-error {
+  color: #b91c1c;
+}
+
+.sync-summary {
+  color: #555;
+  font-size: 0.9rem;
+}
