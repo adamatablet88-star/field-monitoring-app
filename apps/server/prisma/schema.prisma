@@ -1,0 +1,178 @@
+// Initial relational schema for the project skeleton (roadmap step 1).
+// Structural entities (Client..TreatmentWell, User) are modeled fully.
+// Visit records are modeled as one table per protocol with a JSON `data`
+// column holding the shape defined in packages/shared/src/visits.ts —
+// they get fully relational columns once each field form is implemented
+// (roadmap steps 4-6), so the schema doesn't need to be re-guessed twice.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  technician
+}
+
+model User {
+  id           String @id @default(uuid())
+  username     String @unique
+  passwordHash String
+  role         Role
+}
+
+model Client {
+  id    String @id @default(uuid())
+  name  String
+  sites Site[]
+}
+
+model Site {
+  id             String   @id @default(uuid())
+  clientId       String
+  client         Client   @relation(fields: [clientId], references: [id])
+  name           String
+  location       Json
+  protocolTypes  String[] // "fuelLens" | "SVE" | "bioVenting" | "groundwater"
+
+  wells             Well[]
+  tanks             Tank[]
+  treatmentSystems  TreatmentSystem[]
+}
+
+model Well {
+  id        String @id @default(uuid())
+  siteId    String
+  site      Site   @relation(fields: [siteId], references: [id])
+  code      String
+
+  // WellIdentity
+  x               Float
+  y               Float
+  z               Float
+  manholeMaterial String // "concrete" | "iron"
+  manholeSize     String
+  wellDepth       Float
+  wellDiameter    Float
+  screenFrom      Float
+  screenTo        Float
+
+  recoveryMethod String // "none" | "passive_skimmer" | "absorbent" | "active_skimmer"
+  tankId         String?
+  tank           Tank?   @relation(fields: [tankId], references: [id])
+
+  fuelLensVisits FuelLensVisit[]
+
+  @@index([siteId])
+}
+
+model Tank {
+  id     String @id @default(uuid())
+  siteId String
+  site   Site   @relation(fields: [siteId], references: [id])
+  label  String
+  wells  Well[]
+}
+
+model TreatmentSystem {
+  id          String @id @default(uuid())
+  siteId      String
+  site        Site   @relation(fields: [siteId], references: [id])
+  systemType  String // "SVE" | "bioVenting"
+  systemLabel String
+
+  parameters ParameterConfig[]
+  wells      TreatmentWell[]
+
+  sveSystemVisits         SveSystemVisit[]
+  bioVentingSystemVisits  BioVentingSystemVisit[]
+
+  @@index([siteId])
+}
+
+model ParameterConfig {
+  id                String          @id @default(uuid())
+  systemId          String
+  system            TreatmentSystem @relation(fields: [systemId], references: [id])
+  label             String
+  unit              String
+  minValue          Float?
+  maxValue          Float?
+  required          Boolean
+  order             Int
+  criticalDirection String // "none" | "above" | "below"
+  criticalValue     Float?
+  criticalMessage   String
+
+  @@index([systemId])
+}
+
+model TreatmentWell {
+  id       String          @id @default(uuid())
+  systemId String
+  system   TreatmentSystem @relation(fields: [systemId], references: [id])
+  code     String
+
+  // WellIdentity
+  x               Float
+  y               Float
+  z               Float
+  manholeMaterial String
+  manholeSize     String
+  wellDepth       Float
+  wellDiameter    Float
+  screenFrom      Float
+  screenTo        Float
+
+  wellType String // "treatment" | "monitoring" | "groundwater"
+
+  groundwaterVisits GroundwaterVisit[]
+
+  @@index([systemId])
+}
+
+model FuelLensVisit {
+  id        String   @id @default(uuid())
+  wellId    String
+  well      Well     @relation(fields: [wellId], references: [id])
+  visitDate DateTime
+  data      Json // shape: FuelLensVisit in packages/shared/src/visits.ts
+
+  @@index([wellId])
+}
+
+model SveSystemVisit {
+  id        String          @id @default(uuid())
+  systemId  String
+  system    TreatmentSystem @relation(fields: [systemId], references: [id])
+  visitDate DateTime
+  visitType String // "small" | "large" | "baseline"
+  data      Json // shape: SveSystemVisit / SveWellVisit[] in packages/shared/src/visits.ts
+
+  @@index([systemId])
+}
+
+model BioVentingSystemVisit {
+  id        String          @id @default(uuid())
+  systemId  String
+  system    TreatmentSystem @relation(fields: [systemId], references: [id])
+  visitDate DateTime
+  data      Json // shape: BioVentingSystemVisit / MonitoringPointReading[] in packages/shared/src/visits.ts
+
+  @@index([systemId])
+}
+
+model GroundwaterVisit {
+  id        String        @id @default(uuid())
+  wellId    String
+  well      TreatmentWell @relation(fields: [wellId], references: [id])
+  visitDate DateTime
+  data      Json // shape: GroundwaterVisit in packages/shared/src/visits.ts
+
+  @@index([wellId])
+}

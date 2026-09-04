@@ -1,8 +1,37 @@
 # אפליקציית ניטור שטח — ייעוץ סביבתי
 
 אפליקציה לאיסוף נתוני שטח עבור ייעוץ סביבתי: ניטור עדשת דלק, מערכות טיפול
-(SVE / Bio-venting) ודיגום מי תהום. הפרויקט נמצא כרגע **בשלב תכנון** —
-הגדרת ארכיטקטורה, מודל נתונים ולוגיקה עסקית — בטרם תחילת כתיבת קוד ביצועי.
+(SVE / Bio-venting) ודיגום מי תהום.
+
+## מבנה המאגר
+
+Monorepo מבוסס npm workspaces:
+
+```
+packages/shared   מקור האמת היחיד למודל הנתונים (TypeScript), משותף ל-client ול-server
+apps/server        Node.js + TypeScript + Express + Prisma (PostgreSQL)
+apps/client        React + TypeScript + Vite, PWA, מסד מקומי (IndexedDB) דרך Dexie.js
+```
+
+### הרצה מקומית
+
+```bash
+npm install
+npm run build:shared        # חובה לפני הרצת client/server — הם תלויים ב-dist הבנוי
+
+# server
+cp apps/server/.env.example apps/server/.env   # ולהגדיר DATABASE_URL אמיתי
+npm run dev:server
+
+# client (בטרמינל נפרד)
+npm run dev:client
+```
+
+השרת כרגע חושף רק `/health`; הלקוח מציג מסך שלד שמאמת שהמסד המקומי
+(IndexedDB) עולה בהצלחה. אין עדיין טפסי שטח, התחברות, או סנכרון אמיתי —
+ראו `docs/roadmap.md`.
+
+## מסמכי תכנון
 
 ## מסמכי תכנון
 
@@ -26,6 +55,7 @@
 
 ## סטטוס
 
-עד כה לא נכתב קוד יישומי. השלב הבא (ראו [roadmap](docs/roadmap.md)) הוא
-מימוש השרת, מסד הנתונים, מנגנון ה-Offline-first וטפסי ההזנה בשטח, על בסיס
-המפרט המלא במסמכי התכנון.
+שלד הפרויקט (roadmap שלב 1) קיים ורץ: מונורפו עם חבילת טיפוסים משותפת,
+שרת Express+Prisma עם סכמת PostgreSQL ראשונית, ולקוח React+Vite עם מסד
+מקומי (IndexedDB) פעיל. השלב הבא (ראו [roadmap](docs/roadmap.md)) הוא
+מימוש מסך הקמת האתר, מנגנון הסנכרון, וטפסי ההזנה בשטח.

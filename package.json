@@ -1,0 +1,16 @@
+{
+  "name": "field-monitoring-app",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:server": "npm run dev --workspace apps/server",
+    "dev:client": "npm run dev --workspace apps/client",
+    "build": "npm run build --workspace packages/shared && npm run build --workspace apps/server && npm run build --workspace apps/client",
+    "build:shared": "npm run build --workspace packages/shared",
+    "build:server": "npm run build --workspace apps/server",
+    "build:client": "npm run build --workspace apps/client"
+  }
+}
