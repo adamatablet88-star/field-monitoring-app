@@ -33,6 +33,10 @@ function tableFor(entityType: SyncEntityType): Table<{ id: string }, string> {
       return db.sveSystemVisits as unknown as Table<{ id: string }, string>;
     case "bioVentingSystemVisit":
       return db.bioVentingSystemVisits as unknown as Table<{ id: string }, string>;
+    case "groundwaterWell":
+      return db.groundwaterWells as unknown as Table<{ id: string }, string>;
+    case "groundwaterVisit":
+      return db.groundwaterVisits as unknown as Table<{ id: string }, string>;
   }
 }
 

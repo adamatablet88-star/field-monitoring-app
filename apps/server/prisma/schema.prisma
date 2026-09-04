@@ -6,12 +6,13 @@
 // (roadmap steps 4-6), so the schema doesn't need to be re-guessed twice.
 //
 // Client, Site, Well, Tank, TreatmentSystem, TreatmentWell,
-// ParameterConfig, FuelLensVisit, SveSystemVisit and
-// BioVentingSystemVisit additionally carry `version`/`updatedAt`/
-// `deletedAt` — sync bookkeeping used by the optimistic-concurrency
-// push/pull endpoints in src/sync (roadmap steps 2-5). These are
-// server-side only; they're deliberately absent from the shared domain
-// types in packages/shared, which describe entity shape, not sync state.
+// ParameterConfig, GroundwaterWell, FuelLensVisit, SveSystemVisit,
+// BioVentingSystemVisit and GroundwaterVisit additionally carry
+// `version`/`updatedAt`/`deletedAt` — sync bookkeeping used by the
+// optimistic-concurrency push/pull endpoints in src/sync (roadmap steps
+// 2-6). These are server-side only; they're deliberately absent from the
+// shared domain types in packages/shared, which describe entity shape,
+// not sync state.
 
 generator client {
   provider = "prisma-client-js"
@@ -61,6 +62,7 @@ model Site {
   wells             Well[]
   tanks             Tank[]
   treatmentSystems  TreatmentSystem[]
+  groundwaterWells  GroundwaterWell[]
 
   @@index([updatedAt])
 }
@@ -176,9 +178,34 @@ model TreatmentWell {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
+  @@index([systemId])
+  @@index([updatedAt])
+}
+
+model GroundwaterWell {
+  id     String @id @default(uuid())
+  siteId String
+  site   Site   @relation(fields: [siteId], references: [id])
+  code   String
+
+  // WellIdentity
+  x               Float
+  y               Float
+  z               Float
+  manholeMaterial String
+  manholeSize     String
+  wellDepth       Float
+  wellDiameter    Float
+  screenFrom      Float
+  screenTo        Float
+
+  version   Int       @default(1)
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
   groundwaterVisits GroundwaterVisit[]
 
-  @@index([systemId])
+  @@index([siteId])
   @@index([updatedAt])
 }
 
@@ -229,11 +256,16 @@ model BioVentingSystemVisit {
 }
 
 model GroundwaterVisit {
-  id        String        @id @default(uuid())
+  id        String          @id @default(uuid())
   wellId    String
-  well      TreatmentWell @relation(fields: [wellId], references: [id])
+  well      GroundwaterWell @relation(fields: [wellId], references: [id])
   visitDate DateTime
-  data      Json // shape: GroundwaterVisit in packages/shared/src/visits.ts
+  data      Json // full shape: GroundwaterVisit in packages/shared/src/visits.ts
+
+  version   Int       @default(1)
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   @@index([wellId])
+  @@index([updatedAt])
 }

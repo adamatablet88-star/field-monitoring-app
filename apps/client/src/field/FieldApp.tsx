@@ -4,6 +4,7 @@ import { db } from "../db";
 import { useLocalCollection } from "../admin/useLocalCollection";
 import { FuelLensWellList } from "./FuelLensWellList";
 import { TreatmentSystemList } from "./TreatmentSystemList";
+import { GroundwaterWellList } from "./groundwater/GroundwaterWellList";
 import "../admin/admin.css";
 import "./field.css";
 
@@ -60,9 +61,7 @@ export function FieldApp() {
         {activeProtocol === "fuelLens" && <FuelLensWellList siteId={selectedSite.id} />}
         {activeProtocol === "SVE" && <TreatmentSystemList siteId={selectedSite.id} systemType="SVE" />}
         {activeProtocol === "bioVenting" && <TreatmentSystemList siteId={selectedSite.id} systemType="bioVenting" />}
-        {activeProtocol === "groundwater" && (
-          <p className="hint">טופס דיגום מי תהום עדיין לא מומש — ראו docs/roadmap.md.</p>
-        )}
+        {activeProtocol === "groundwater" && <GroundwaterWellList siteId={selectedSite.id} />}
       </div>
     );
   }

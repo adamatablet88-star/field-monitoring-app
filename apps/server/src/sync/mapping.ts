@@ -9,6 +9,8 @@ import type {
   FuelLensVisit as FuelLensVisitRow,
   SveSystemVisit as SveSystemVisitRow,
   BioVentingSystemVisit as BioVentingSystemVisitRow,
+  GroundwaterWell as GroundwaterWellRow,
+  GroundwaterVisit as GroundwaterVisitRow,
 } from "@prisma/client";
 import type {
   Client,
@@ -21,6 +23,8 @@ import type {
   FuelLensVisit,
   SveSystemVisit,
   BioVentingSystemVisit,
+  GroundwaterWell,
+  GroundwaterVisit,
 } from "@field-monitoring/shared";
 
 // Row -> shared-type payload (what the client sees over the wire).
@@ -124,6 +128,25 @@ export function sveSystemVisitRowToPayload(row: SveSystemVisitRow): SveSystemVis
 
 export function bioVentingSystemVisitRowToPayload(row: BioVentingSystemVisitRow): BioVentingSystemVisit {
   return row.data as unknown as BioVentingSystemVisit;
+}
+
+export function groundwaterWellRowToPayload(row: GroundwaterWellRow): GroundwaterWell {
+  return {
+    id: row.id,
+    siteId: row.siteId,
+    code: row.code,
+    x: row.x,
+    y: row.y,
+    z: row.z,
+    manhole: { material: row.manholeMaterial as GroundwaterWell["manhole"]["material"], size: row.manholeSize },
+    wellDepth: row.wellDepth,
+    wellDiameter: row.wellDiameter,
+    screenInterval: { from: row.screenFrom, to: row.screenTo },
+  };
+}
+
+export function groundwaterVisitRowToPayload(row: GroundwaterVisitRow): GroundwaterVisit {
+  return row.data as unknown as GroundwaterVisit;
 }
 
 // Shared-type payload -> Prisma scalar column data (for create/update).
@@ -238,6 +261,32 @@ export function bioVentingSystemVisitToRowData(payload: BioVentingSystemVisit) {
   return {
     id: payload.id,
     systemId: payload.systemId,
+    visitDate: new Date(payload.visitDate),
+    data: payload as unknown as object,
+  };
+}
+
+export function groundwaterWellToRowData(payload: GroundwaterWell) {
+  return {
+    id: payload.id,
+    siteId: payload.siteId,
+    code: payload.code,
+    x: payload.x,
+    y: payload.y,
+    z: payload.z,
+    manholeMaterial: payload.manhole.material,
+    manholeSize: payload.manhole.size,
+    wellDepth: payload.wellDepth,
+    wellDiameter: payload.wellDiameter,
+    screenFrom: payload.screenInterval.from,
+    screenTo: payload.screenInterval.to,
+  };
+}
+
+export function groundwaterVisitToRowData(payload: GroundwaterVisit) {
+  return {
+    id: payload.id,
+    wellId: payload.wellId,
     visitDate: new Date(payload.visitDate),
     data: payload as unknown as object,
   };

@@ -28,6 +28,10 @@ import {
   sveSystemVisitToRowData,
   bioVentingSystemVisitRowToPayload,
   bioVentingSystemVisitToRowData,
+  groundwaterWellRowToPayload,
+  groundwaterWellToRowData,
+  groundwaterVisitRowToPayload,
+  groundwaterVisitToRowData,
 } from "./mapping.js";
 
 interface SyncableRow {
@@ -188,6 +192,34 @@ const handlers: Record<SyncEntityType, EntityHandler> = {
     softDelete: (id) =>
       prisma.bioVentingSystemVisit.update({ where: { id }, data: { deletedAt: new Date(), version: { increment: 1 } } }),
   },
+  groundwaterWell: {
+    toPayload: (row) => groundwaterWellRowToPayload(row as Parameters<typeof groundwaterWellRowToPayload>[0]),
+    toRowData: (payload) => groundwaterWellToRowData(payload as Parameters<typeof groundwaterWellToRowData>[0]),
+    findUnique: (id) => prisma.groundwaterWell.findUnique({ where: { id } }),
+    create: (data) =>
+      prisma.groundwaterWell.create({ data: data as Parameters<typeof prisma.groundwaterWell.create>[0]["data"] }),
+    update: (id, data) =>
+      prisma.groundwaterWell.update({
+        where: { id },
+        data: { ...data, version: { increment: 1 } } as Parameters<typeof prisma.groundwaterWell.update>[0]["data"],
+      }),
+    softDelete: (id) =>
+      prisma.groundwaterWell.update({ where: { id }, data: { deletedAt: new Date(), version: { increment: 1 } } }),
+  },
+  groundwaterVisit: {
+    toPayload: (row) => groundwaterVisitRowToPayload(row as Parameters<typeof groundwaterVisitRowToPayload>[0]),
+    toRowData: (payload) => groundwaterVisitToRowData(payload as Parameters<typeof groundwaterVisitToRowData>[0]),
+    findUnique: (id) => prisma.groundwaterVisit.findUnique({ where: { id } }),
+    create: (data) =>
+      prisma.groundwaterVisit.create({ data: data as Parameters<typeof prisma.groundwaterVisit.create>[0]["data"] }),
+    update: (id, data) =>
+      prisma.groundwaterVisit.update({
+        where: { id },
+        data: { ...data, version: { increment: 1 } } as Parameters<typeof prisma.groundwaterVisit.update>[0]["data"],
+      }),
+    softDelete: (id) =>
+      prisma.groundwaterVisit.update({ where: { id }, data: { deletedAt: new Date(), version: { increment: 1 } } }),
+  },
 };
 
 function isPrismaUniqueViolation(err: unknown): boolean {
@@ -313,6 +345,8 @@ syncRouter.get("/sync/pull", async (req, res) => {
     fuelLensVisits,
     sveSystemVisits,
     bioVentingSystemVisits,
+    groundwaterWells,
+    groundwaterVisits,
   ] = await Promise.all([
     prisma.client.findMany({ where: updatedAtFilter }),
     prisma.site.findMany({ where: updatedAtFilter }),
@@ -324,6 +358,8 @@ syncRouter.get("/sync/pull", async (req, res) => {
     prisma.fuelLensVisit.findMany({ where: updatedAtFilter }),
     prisma.sveSystemVisit.findMany({ where: updatedAtFilter }),
     prisma.bioVentingSystemVisit.findMany({ where: updatedAtFilter }),
+    prisma.groundwaterWell.findMany({ where: updatedAtFilter }),
+    prisma.groundwaterVisit.findMany({ where: updatedAtFilter }),
   ]);
 
   const entities: SyncPullEntity[] = [
@@ -339,6 +375,8 @@ syncRouter.get("/sync/pull", async (req, res) => {
     ...bioVentingSystemVisits.map((row) =>
       toPullEntity("bioVentingSystemVisit", row, handlers.bioVentingSystemVisit.toPayload),
     ),
+    ...groundwaterWells.map((row) => toPullEntity("groundwaterWell", row, handlers.groundwaterWell.toPayload)),
+    ...groundwaterVisits.map((row) => toPullEntity("groundwaterVisit", row, handlers.groundwaterVisit.toPayload)),
   ];
 
   const response: SyncPullResponse = { serverTime: serverTime.toISOString(), entities };

@@ -8,10 +8,16 @@
 
 ```
 Client (חברת דלק) ──< Site ──< Well (עדשת דלק)
-                        │  └──< Tank (מיכל משותף, many-to-one מ-Well)
+                        │  ├──< Tank (מיכל משותף, many-to-one מ-Well)
+                        │  └──< GroundwaterWell (ניטור מי תהום, עצמאי ברמת האתר)
                         └──< TreatmentSystem (SVE / Bio-venting)
                                 └──< TreatmentWell (wellType: treatment|monitoring|groundwater)
 ```
+
+`GroundwaterWell` (סעיף 9.4) נוסף כישות עצמאית ברמת האתר בסבב המימוש —
+אתר יכול להריץ תוכנית דיגום מי תהום גם בלי SVE/Bio-venting. קידוח תחת
+מערכת טיפול עם `wellType === "groundwater"` ממשיך להתקיים במודל לקידוחי
+השפעה תחת מערכת ספציפית, אך אינו מקושר למסך הטופס בשלב זה.
 
 ## 2. תעודת זהות פיזית משותפת לקידוח
 
@@ -272,6 +278,10 @@ interface MonitoringPointReading {
 ### 9.4 דיגום מי תהום (`GroundwaterVisit`)
 
 ```ts
+interface GroundwaterWell extends WellIdentity {
+  siteId: string;                    // עצמאי ברמת האתר — לא תחת מערכת טיפול
+}
+
 interface WellCondition {
   capIntegrity: "ok" | "not_ok";
   casingIntegrity: "ok" | "not_ok";
@@ -289,7 +299,7 @@ interface StabilizationReading {
 
 interface GroundwaterVisit {
   id: string;
-  wellId: string;                    // TreatmentWell עם wellType === "groundwater", או קידוח דיגום עצמאי
+  wellId: string;                    // GroundwaterWell.id
   visitDate: string;
   condition: WellCondition;
   waterDepth: number;

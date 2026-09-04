@@ -8,9 +8,10 @@ import { WellsPanel } from "./WellsPanel";
 import { TanksPanel } from "./TanksPanel";
 import { TreatmentSystemsPanel } from "./TreatmentSystemsPanel";
 import { TreatmentSystemDetail } from "./TreatmentSystemDetail";
+import { GroundwaterWellsPanel } from "./GroundwaterWellsPanel";
 import "./admin.css";
 
-type Tab = "wells" | "tanks" | "systems";
+type Tab = "wells" | "tanks" | "systems" | "groundwater";
 
 export function AdminApp() {
   const [clientId, setClientId] = useState<string | null>(null);
@@ -56,6 +57,13 @@ export function AdminApp() {
             >
               מערכות טיפול
             </button>
+            <button
+              type="button"
+              className={activeTab === "groundwater" ? "active" : ""}
+              onClick={() => setActiveTab("groundwater")}
+            >
+              ניטור מי תהום
+            </button>
           </nav>
 
           {activeTab === "wells" && <WellsPanel siteId={siteId} />}
@@ -66,6 +74,7 @@ export function AdminApp() {
               {selectedSystem && <TreatmentSystemDetail system={selectedSystem} />}
             </>
           )}
+          {activeTab === "groundwater" && <GroundwaterWellsPanel siteId={siteId} />}
         </>
       )}
     </div>

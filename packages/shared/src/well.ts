@@ -17,3 +17,13 @@ export interface Tank {
   label: string;
   wellIds: string[];
 }
+
+/**
+ * A standalone groundwater-monitoring well, scoped to a site rather than
+ * a treatment system — a site can run a groundwater sampling program
+ * (docs/business-logic.md section 4) independently of whether it also
+ * has an SVE/Bio-venting system.
+ */
+export interface GroundwaterWell extends WellIdentity {
+  siteId: string;
+}

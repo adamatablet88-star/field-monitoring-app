@@ -126,3 +126,21 @@
 .parameter-reading-row {
   margin: 0.5rem 0;
 }
+
+.stabilization-row {
+  flex-wrap: wrap;
+  align-items: end;
+  border-top: 1px dashed #ddd;
+  padding-top: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.stabilization-row label {
+  min-width: 4.5rem;
+}
+
+.sequence-badge {
+  font-weight: 600;
+  color: #555;
+  align-self: center;
+}
