@@ -50,7 +50,7 @@ roadmap שלב 7) — לא רק תיאור כוונה:
 | Server / API | Node.js + TypeScript (REST או tRPC) | |
 | מסד שרת | PostgreSQL | טבלאות יחסיות תואמות למודל הישויות; JSONB לקונפיגורציית פרמטרים גמישה |
 | אימות | JWT (`jsonwebtoken`) + `bcryptjs` לגיבוב סיסמאות, RBAC ברמת ה-API | ממומש — ראו `apps/server/src/auth/` |
-| ייצוא | ספריית Excel (למשל `exceljs`) ליצירת קובץ תואם דוח רגולטורי | פרוטוטייפ הייצוא הקיים משמש בסיס לפורמט |
+| ייצוא | `exceljs` בצד לקוח (נטען lazy, רק בלחיצה על הכפתור) | ממומש — ראו `apps/client/src/export/`, roadmap שלב 10 |
 
 בחירה זו אינה סופית — היא נקודת מוצא סבירה ל-Offline-first + RBAC + דוחות
 Excel, וניתנת לשינוי בתחילת שלב המימוש אם יש העדפה אחרת.

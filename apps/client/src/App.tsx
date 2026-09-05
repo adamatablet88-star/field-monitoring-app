@@ -7,11 +7,12 @@ import { AdminApp } from "./admin/AdminApp";
 import { FieldApp } from "./field/FieldApp";
 import { ConflictsPanel } from "./sync/ConflictsPanel";
 import { DueThisMonthView } from "./compliance/DueThisMonthView";
+import { TrendsView } from "./trends/TrendsView";
 import { LoginForm } from "./auth/LoginForm";
 import { getStoredUser, clearAuth } from "./auth/authStore";
 import "./App.css";
 
-type MainTab = "field" | "due" | "admin";
+type MainTab = "field" | "due" | "trends" | "admin";
 
 function App() {
   const [user, setUser] = useState<PublicUser | null>(() => getStoredUser());
@@ -116,6 +117,9 @@ function App() {
         <button type="button" className={mainTab === "due" ? "active" : ""} onClick={() => setMainTab("due")}>
           מה נדרש החודש
         </button>
+        <button type="button" className={mainTab === "trends" ? "active" : ""} onClick={() => setMainTab("trends")}>
+          דשבורד מגמות
+        </button>
         {user.role === "admin" && (
           <button type="button" className={mainTab === "admin" ? "active" : ""} onClick={() => setMainTab("admin")}>
             הקמת אתר
@@ -125,6 +129,7 @@ function App() {
 
       {mainTab === "admin" && user.role === "admin" && <AdminApp />}
       {mainTab === "due" && <DueThisMonthView />}
+      {mainTab === "trends" && <TrendsView />}
       {mainTab === "field" && <FieldApp />}
       {mainTab === "admin" && user.role !== "admin" && <FieldApp />}
     </main>
