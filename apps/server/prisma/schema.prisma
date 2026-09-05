@@ -20,7 +20,12 @@
 // technician edit only visits they created, same day (roadmap step 7).
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // "native" covers local dev and Render (both run on whatever OS the
+  // process actually starts on). "rhel-openssl-3.0.x" additionally covers
+  // Netlify Functions, which run on AWS Lambda's Amazon Linux — needed
+  // only for that deploy target, harmless everywhere else.
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {

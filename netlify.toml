@@ -1,0 +1,35 @@
+# Netlify deploy target: the client is Netlify's native static-site
+# hosting; the API (apps/server) runs as a single serverless function
+# (netlify/functions/api.mjs, wrapping the same Express app used by
+# apps/server/src/index.ts via serverless-http) reached through the
+# redirects below. See README.md's "סביבת בדיקות בענן" for the
+# plain-language walkthrough — this targets Netlify + a separate free
+# Postgres (e.g. Neon), since Netlify itself doesn't host a database.
+
+[build]
+  command = "npm install && npm run build --workspace packages/shared && npm run build --workspace apps/server && (cd apps/server && npx prisma generate) && npm run build --workspace apps/client"
+  publish = "apps/client/dist"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+  # Prisma's generated client ships prebuilt native query-engine binaries
+  # that esbuild can't usefully inline — bundling breaks it. Netlify
+  # copies these node_modules in as-is alongside the bundled function
+  # instead of trying to inline them.
+  external_node_modules = ["@prisma/client", ".prisma/client"]
+
+[[redirects]]
+  from = "/health"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/auth/*"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/sync/*"
+  to = "/.netlify/functions/api"
+  status = 200

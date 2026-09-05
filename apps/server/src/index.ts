@@ -1,19 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import cors from "cors";
 import express from "express";
-import { syncRouter } from "./sync/router.js";
-import { authRouter } from "./auth/router.js";
+import { createApp } from "./app.js";
 import { seedAdminIfConfigured } from "./seedAdmin.js";
-
-const app = express();
-app.use(cors());
-app.use(express.json());
-
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok" });
-});
 
 // Optional single-service deploy mode (e.g. Render's free tier, see
 // render.yaml): if a client build sits alongside this one, serve it from
@@ -21,26 +11,18 @@ app.get("/health", (_req, res) => {
 // window.location.origin) — no second service, no cross-origin URL to
 // get right. Skipped entirely when absent, so local dev (client served
 // separately by Vite) is unaffected.
-//
-// Mounted as plain static-file serving *before* the API routers: it only
-// responds when the request path matches an actual built file (e.g.
-// /assets/*) and otherwise calls next(), so it can't shadow /auth/* or
-// /sync/*. The reverse order matters too — syncRouter.use(requireAuth)
-// runs unconditionally for every request that reaches syncRouter (a
-// router-level `.use()` isn't scoped to its own routes), so mounting the
-// SPA fallback below *before* the API routers would have it swallow
-// every request (including a stray one that shouldn't 401) before auth
-// even gets a say; mounting the fallback last, after both routers, is
-// what keeps a real API 401/404 from being masked by index.html.
 const clientDistPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "../../client/dist");
 const hasClientBuild = fs.existsSync(clientDistPath);
-if (hasClientBuild) {
-  app.use(express.static(clientDistPath));
-}
 
-app.use(authRouter);
-app.use(syncRouter);
+const app = createApp((app) => {
+  if (hasClientBuild) {
+    app.use(express.static(clientDistPath));
+  }
+});
 
+// SPA fallback, mounted last (after authRouter/syncRouter inside
+// createApp) so it can't shadow a real API route like GET /sync/pull —
+// see createApp's own comment for why the ordering matters.
 if (hasClientBuild) {
   app.get("*", (_req, res) => {
     res.sendFile(path.join(clientDistPath, "index.html"));
