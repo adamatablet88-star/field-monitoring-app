@@ -1,0 +1,42 @@
+# Render Blueprint — one click ("New +" → "Blueprint", connect this repo)
+# provisions a free Postgres database and one free web service that
+# builds and serves the whole app (API + the built client) from a single
+# URL. See README.md's "פריסה לענן" section for the plain-language,
+# step-by-step version of this for someone who has never deployed
+# anything before.
+#
+# Why one combined service instead of two (server + separate static
+# site): a static site needs to know the API's URL at build time, which
+# means guessing a URL before it exists, or wiring up a cross-service
+# reference — both are extra steps and extra ways for a first deploy to
+# go wrong. Serving both from the same process means the client just
+# calls its own origin (apps/client/src/apiBase.ts falls back to
+# window.location.origin in production), so there is nothing to get
+# wrong. See apps/server/src/index.ts for the serving side of this.
+databases:
+  - name: field-monitoring-db
+    plan: free
+
+services:
+  - type: web
+    name: field-monitoring-app
+    env: node
+    plan: free
+    buildCommand: >-
+      npm install &&
+      npm run build --workspace packages/shared &&
+      npm run build --workspace apps/server &&
+      (cd apps/server && npx prisma generate && npx prisma migrate deploy) &&
+      npm run build --workspace apps/client
+    startCommand: node apps/server/dist/index.js
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: field-monitoring-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SEED_ADMIN_USERNAME
+        value: admin
+      - key: SEED_ADMIN_PASSWORD
+        generateValue: true

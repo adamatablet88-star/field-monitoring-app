@@ -1,24 +1,11 @@
-import { PrismaClient } from "@prisma/client";
-import { hashPassword } from "../src/auth/password.js";
-
-const prisma = new PrismaClient();
+import { prisma } from "../src/prisma.js";
+import { seedAdminIfConfigured } from "../src/seedAdmin.js";
 
 async function main() {
-  const username = process.env.SEED_ADMIN_USERNAME;
-  const password = process.env.SEED_ADMIN_PASSWORD;
-  if (!username || !password) {
+  if (!process.env.SEED_ADMIN_USERNAME || !process.env.SEED_ADMIN_PASSWORD) {
     throw new Error("SEED_ADMIN_USERNAME and SEED_ADMIN_PASSWORD must be set (see .env.example)");
   }
-
-  const existing = await prisma.user.findUnique({ where: { username } });
-  if (existing) {
-    console.log(`user "${username}" already exists — skipping seed`);
-    return;
-  }
-
-  const passwordHash = await hashPassword(password);
-  await prisma.user.create({ data: { username, passwordHash, role: "admin" } });
-  console.log(`created admin user "${username}"`);
+  await seedAdminIfConfigured();
 }
 
 main()
